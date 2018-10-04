@@ -1,6 +1,9 @@
-C_SOURCES = $(wildcard drivers/*.c kernel/*.c)
-HEADERS = $(wildcard drivers/*.h kernel/*.c)
+C_SOURCES = $(wildcard drivers/*.c kernel/*.c libs/*.c)
+HEADERS = $(wildcard drivers/*.h kernel/*.h libs/*.h)
 OBJ = $(C_SOURCES:.c=.o)
+CC = /usr/local/i386elfgcc/bin/i386-elf-gcc
+CFLAGS = -m32 -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs \
+	     -Wall -Wextra -Werror
 
 all: run
 
@@ -21,7 +24,7 @@ kernel.bin: boot/kernel_entry.o $(OBJ)
 	i386-elf-ld -o $@ -Ttext 0x1000 $^ --oformat binary
 
 %.o: %.c $(HEADERS)
-	i386-elf-gcc -ffreestanding -c $< -o $@
+	$(CC) $(CFLAGS) -ffreestanding -c $< -o $@
 
 %.bin: %.asm
 	nasm -f bin $< -o $@

@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include "port.h"
 #include "screen.h"
 #include "../kernel/memory.h"
@@ -106,9 +107,9 @@ int putChar(char c, int row, int col, char format) {
 	return offset;
 }
 
-void setEmpty(unsigned int begin, unsigned int length) {
+void setEmpty(unsigned int begin, size_t length) {
 	unsigned char* addr = (unsigned char*)VIDEO_ADDRESS;
-	for (int i = 0; i < length; i++) {
+	for (size_t i = 0; i < length; i++) {
 		addr[begin + i * 2] = ' ';
 		addr[begin + i * 2 + 1] = WHITE_ON_BLACK;
 	}
@@ -116,7 +117,7 @@ void setEmpty(unsigned int begin, unsigned int length) {
 
 void handleScroll(){
 	unsigned int offset = 2 * MAX_COLS;
-	memcpy((unsigned char*)(VIDEO_ADDRESS+offset), (unsigned char*)VIDEO_ADDRESS, MAX_COLS*(MAX_ROWS-1)*2);
+	memcpy((unsigned char*)(VIDEO_ADDRESS+offset), (unsigned char*)VIDEO_ADDRESS, MAX_COLS*(MAX_ROWS-1)*2, 1);
 	offset = MAX_COLS*(MAX_ROWS-1)*2;
 	setEmpty(offset, MAX_COLS);
 	setCursorOffset(offset);

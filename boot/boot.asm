@@ -20,9 +20,9 @@ jmp $
 
 [bits 16]
 load_kernel:
-	mov bx, KERNEL_OFFSET
-	mov dh, 9
-	mov dl, [BOOT_DRIVER]
+	mov bx, KERNEL_OFFSET  ; target address
+	mov dh, 9              ; load nine sections
+	mov dl, [BOOT_DRIVER]  ; boot driver number
 	call load_disk
 	ret
 
