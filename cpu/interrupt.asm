@@ -59,12 +59,14 @@ isr_install:
 	ret
 	pusha
 	%macro isr_ 1
+	cli
 	push isr_%1
 	push %1
 	call set_idt_gate
 	%endmacro
 	
 	%macro irq_ 2
+	cli
 	push irq_%1
 	push %2
 	call set_idt_gate
