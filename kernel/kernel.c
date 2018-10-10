@@ -3,9 +3,13 @@
 #include "memory.h"
 #include "../libs/string.h"
 #define UNUSED(x) (void)(x)
+extern void isr_install();
+
+
 void main(){
 	initMemTable();
 	clearScreen();
+	isr_install();
 	print("Kernel entered.\n");
 	char* x = (char*)malloc(10);
 	char* tmp = int_to_hex((uint32_t)x);
@@ -22,4 +26,5 @@ void main(){
 	if (t != 0) {
 		print("Error");
 	}
+	__asm__ __volatile__("int $1");
 }
