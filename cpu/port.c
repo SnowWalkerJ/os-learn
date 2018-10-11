@@ -8,7 +8,7 @@ uint8_t portByteIn(uint16_t port) {
 }
 
 void portByteOut(uint16_t port, uint8_t data) {
-	__asm__("out %%al, %%dx" : : "a" (data), "d" (port));
+	__asm__ __volatile__("out %%al, %%dx" : : "a" (data), "d" (port));
 }
 
 uint16_t portWordIn(uint16_t port) {
@@ -18,5 +18,5 @@ uint16_t portWordIn(uint16_t port) {
 }
 
 void portWordOut(uint16_t port, uint16_t data) {
-	__asm__("out %%ax, %%dx" : : "a" (data), "d" (port));
+	__asm__ __volatile__("out %%ax, %%dx" : : "a" (data), "d" (port));
 }

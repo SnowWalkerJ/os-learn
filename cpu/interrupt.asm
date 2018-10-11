@@ -23,7 +23,6 @@ isr_common_stub:
 	call isr_handler
 
 	pop eax
-	pop eax
 	mov ds, ax
 	mov es, ax
 	mov fs, ax
@@ -56,17 +55,16 @@ irq_common_stub:
 
 global isr_install
 isr_install:
-	ret
 	pusha
+	push ebp
+	mov ebp, esp
 	%macro isr_ 1
-	cli
 	push isr_%1
 	push %1
 	call set_idt_gate
 	%endmacro
 	
 	%macro irq_ 2
-	cli
 	push irq_%1
 	push %2
 	call set_idt_gate
@@ -77,19 +75,13 @@ isr_install:
 	push word %1
 	call portByteOut
 	%endmacro
-
+	
 	%assign i 0
 	%rep 32
 		isr_ i
 		%assign i i+1
 	%endrep
 
-	push PIC1_DATA
-	call portByteIn
-	push eax
-	push PIC2_DATA
-	call portByteIn
-	push eax
 	pbo PIC1_CMD, 0x11
 	pbo PIC2_CMD, 0x11
 	pbo PIC1_DATA, 0x20
@@ -98,10 +90,8 @@ isr_install:
 	pbo PIC2_DATA, 0x02
 	pbo PIC1_DATA, 0x01
 	pbo PIC2_DATA, 0x01
-	pop eax
-	pbo PIC1_DATA, eax
-	pop eax
-	pbo PIC2_DATA, eax
+	pbo PIC1_DATA, 0x00
+	pbo PIC2_DATA, 0x00
 
 	%assign i 32
 	%rep 16
@@ -110,12 +100,16 @@ isr_install:
 		%assign i i+1
 	%endrep
 	call set_idt
+
+	mov esp, ebp
+	pop ebp
 	popa
 	ret
 
 %macro m_isr 1
 global isr_%1
 isr_%1:
+	cli
 	push byte 0
 	push byte %1
 	jmp isr_common_stub
@@ -130,7 +124,8 @@ isr_%1:
 %macro m_irq 1
 global irq_%1
 irq_%1:
-	push byte 0
+	cli
+	push byte %1
 	%assign tmp %1+32
 	push byte tmp
 	jmp irq_common_stub

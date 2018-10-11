@@ -1,17 +1,22 @@
 C_SOURCES = $(wildcard drivers/*.c kernel/*.c libs/*.c cpu/*.c)
 HEADERS = $(wildcard drivers/*.h kernel/*.h libs/*.h cpu/*.h)
-OBJ = $(C_SOURCES:.c=.o cpu/interrupt.o)
+OBJ = $(C_SOURCES:.c=.o) cpu/interrupt.o
+GDB = /usr/local/i386elfgcc/bin/i386-elf-gdb
 CC = /usr/local/i386elfgcc/bin/i386-elf-gcc
 CFLAGS = -m32 -fno-builtin -ffreestanding -fno-stack-protector -nostartfiles -nodefaultlibs \
-	     -Wall -Wextra -Werror
+	     -Wall -Wextra -Werror -fno-exceptions
 
 all: run
 
 run: os-image
 	qemu-system-i386 -curses -fda $<
 
+debug: os-image kernel.elf
+	qemu-system-i386 -s -curses -fda os-image -d guest_errors,int & $(GDB) -ex "target remote localhost:1234" -ex "symbol-file kernel.elf"
+
 clean:
-	rm kernel/*.o drivers/*.o boot/*.bin
+	rm $(OBJ)
+	rm boot/*.bin
 	rm *.bin os-image
 
 os-image: boot/boot.bin kernel.bin
@@ -31,4 +36,7 @@ kernel.bin: boot/kernel_entry.o $(OBJ)
 
 %.bin: %.asm
 	nasm -f bin $< -o $@
+
+kernel.elf: boot/kernel_entry.o $(OBJ)
+	i386-elf-ld -o $@ -Ttext 0x1000 $^
 
