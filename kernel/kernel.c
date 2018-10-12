@@ -7,10 +7,10 @@ extern void isr_install();
 
 
 void main(){
-	//initMemTable();
-	//clearScreen();
+	initMemTable();
+	clearScreen();
+	print("Kernel entered.\n");
 	isr_install();
-	//print("Kernel entered.\n");
 	//char* x = (char*)malloc(10);
 	//char* tmp = int_to_hex((uint32_t)x);
 	//print(tmp);
@@ -26,5 +26,6 @@ void main(){
 	//if (t != 0) {
 	//	print("Error");
 	//}
+	__asm__ __volatile__("int $2");
 	__asm__ __volatile__("int $3");
 }

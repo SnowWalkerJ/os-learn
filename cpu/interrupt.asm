@@ -2,6 +2,7 @@
 [extern isr_handler]
 [extern irq_handler]
 [extern portByteOut]
+[extern portByteOut2]
 [extern portByteIn]
 [extern set_idt]
 [extern set_idt_gate]
@@ -62,18 +63,23 @@ isr_install:
 	push isr_%1
 	push %1
 	call set_idt_gate
+	add esp, 8
 	%endmacro
 	
 	%macro irq_ 2
 	push irq_%1
 	push %2
 	call set_idt_gate
+	add esp, 8
 	%endmacro
 
 	%macro pbo 2
-	push byte %2
-	push word %1
+	xor eax, eax
+	mov eax, %2
+	push eax
+	push %1
 	call portByteOut
+	add esp, 8
 	%endmacro
 	
 	%assign i 0

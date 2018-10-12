@@ -54,11 +54,9 @@ char* exceptions_messages[] = {
 
 void isr_handler(registers_t reg) {
 	print("received interrupt: ");
-	return;
 	char*hex = int_to_hex(reg.int_no);
 	print(hex);
-	print("\n");
-	//free(hex);
+	free(hex);
 	print(exceptions_messages[reg.int_no]);
 	print("\n");
 }
@@ -82,3 +80,4 @@ void irq_handler(registers_t reg) {
 		handler(reg);
 	}
 }
+
