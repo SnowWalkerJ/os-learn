@@ -15,3 +15,10 @@ char* int_to_hex(uint32_t value) {
 	}
 	return x;
 }
+
+unsigned int strlen(char* string) {
+	unsigned int i;
+	for (i = 0; string[i] != 0; i++);
+	return i;
+}
+

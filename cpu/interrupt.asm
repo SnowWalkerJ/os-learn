@@ -21,8 +21,11 @@ isr_common_stub:
 	mov es, ax
 	mov fs, ax
 	mov gs, ax
+	push esp
+	cld
 	call isr_handler
 
+	pop eax
 	pop eax
 	mov ds, ax
 	mov es, ax
@@ -30,7 +33,6 @@ isr_common_stub:
 	mov gs, ax
 	popa
 	add esp, 8
-	sti
 	iret
 
 irq_common_stub:
@@ -42,8 +44,11 @@ irq_common_stub:
 	mov es, ax
 	mov fs, ax
 	mov gs, ax
+	push esp
+	cld
 	call irq_handler
 
+	pop ebx
 	pop ebx
 	mov ds, bx
 	mov es, bx
@@ -51,7 +56,6 @@ irq_common_stub:
 	mov gs, bx
 	popa
 	add esp, 8
-	sti
 	iret
 
 global isr_install

@@ -1,5 +1,5 @@
 #ifndef ISR_H
-#define IST_H
+#define ISR_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -29,7 +29,7 @@ typedef struct{
 } registers_t;
 
 extern void isr_install();
-void isr_handler(registers_t r);
-typedef void (*isr_t)(registers_t);
+void isr_handler(registers_t* r);
+typedef void (*isr_t)(registers_t*);
 void register_interrupt_handler(uint8_t n, isr_t handler);
 #endif

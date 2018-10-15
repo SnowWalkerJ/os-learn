@@ -15,15 +15,6 @@ void portByteOut(uint32_t port, uint32_t data) {
 	__asm__ __volatile__("out %%al, %%dx" : : "a" (data8), "d" (port16));
 }
 
-void portByteOut2(uint32_t port, uint32_t data) {
-	char *hex = int_to_hex((uint32_t)port);
-	print(hex);
-	free(hex);
-	hex = int_to_hex((uint32_t)data);
-	print(hex);
-	free(hex);
-}
-
 uint16_t portWordIn(uint16_t port) {
 	uint16_t result;
 	__asm__("in %%dx, %%ax" : "=a" (result) : "d" (port));
