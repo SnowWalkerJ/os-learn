@@ -49,9 +49,16 @@ void show(char key) {
 void keyboard_callback(registers_t* regs) {
 	uint8_t scan_code = portByteIn(PS2_DATA);
 	if (scan_code > SC_MAX) return;
-	char key = sc_ascii[scan_code];
-	append(key);
-	show(key);
+	if (scan_code == BACKSPACE) {
+		if (key_buffer_cursor > 0) {
+			backspace();
+			key_buffer_cursor--;
+		}
+	} else {
+		char key = sc_ascii[scan_code];
+		append(key);
+		show(key);
+	}
 	UNUSED(regs);
 }
 

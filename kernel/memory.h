@@ -5,5 +5,5 @@
 void initMemTable();
 void* malloc(size_t);
 int free(void*);
-void memcpy(void*, void*, size_t, int);
+void memcpy(void*, void*, size_t);
 #endif

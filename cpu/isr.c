@@ -62,16 +62,7 @@ void isr_handler(registers_t* reg) {
 }
 
 void register_interrupt_handler(uint8_t n, isr_t handler) {
-	char* hex = int_to_hex((uint32_t)handler);
-	print(hex);
-	free(hex);
-	hex = int_to_hex((uint32_t)n);
-	print(hex);
-	free(hex);
 	interrupt_handlers[n] = handler;
-	hex = int_to_hex((uint32_t)interrupt_handlers[n]);
-	print(hex);
-	free(hex);
 }
 
 void irq_handler(registers_t* reg) {

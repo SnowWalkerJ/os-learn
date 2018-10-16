@@ -9,6 +9,7 @@
 
 
 void print(char*);
+void backspace();
 void clearScreen();
 
 

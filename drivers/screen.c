@@ -117,9 +117,14 @@ void setEmpty(unsigned int begin, size_t length) {
 
 void handleScroll(){
 	unsigned int offset = 2 * MAX_COLS;
-	memcpy((unsigned char*)(VIDEO_ADDRESS+offset), (unsigned char*)VIDEO_ADDRESS, MAX_COLS*(MAX_ROWS-1)*2, 1);
+	memcpy((unsigned char*)(VIDEO_ADDRESS+offset), (unsigned char*)VIDEO_ADDRESS, MAX_COLS*(MAX_ROWS-1)*2);
 	offset = MAX_COLS*(MAX_ROWS-1)*2;
 	setEmpty(offset, MAX_COLS);
 	setCursorOffset(offset);
 }
 
+void backspace() {
+	int offset = getCursorOffset() - 2;
+	setCursorOffset(offset);
+	*(char*)(VIDEO_ADDRESS+offset) = ' ';
+}

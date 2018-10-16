@@ -21,12 +21,12 @@ void recycleMemBlock(uint32_t i){
 	if (i > 0 && !(memTable+i-1)->used) {
 		(memTable+i-1)->size += (memTable+i)->size;
 		i--;
-		memcpy(memTable+(i+2)*MB_SIZE, memTable+(i+1)*MB_SIZE, numBlocks-i-1, -1);
+		memcpy(memTable+(i+2)*MB_SIZE, memTable+(i+1)*MB_SIZE, numBlocks-i-1);
 		numBlocks--;
 	}
 	if (!(memTable+i+1)->used) {
 		(memTable+i)->size += (memTable+i+1)->size;
-		memcpy(memTable+(i+2)*MB_SIZE, memTable+(i+1)*MB_SIZE, numBlocks-i-1, -1);
+		memcpy(memTable+(i+2)*MB_SIZE, memTable+(i+1)*MB_SIZE, numBlocks-i-1);
 		numBlocks--;
 	}
 }
@@ -40,11 +40,11 @@ void initMemTable() {
 
 void* malloc(size_t size) {
 	size_t i = 0;
-	while(1) {
+	while(i < (START_ADDR - (int)MEM_TABLE_START) / MB_SIZE) {
 		MemoryBlock *mb = memTable+i;
 		if (mb->used) i++;
 		else if (mb->size >= size) {
-			memcpy(mb, (mb+1), MB_SIZE*(numBlocks-i+1), -1);
+			memcpy(mb, (mb+1), MB_SIZE*(numBlocks-i+1));
 			numBlocks++;
 			(memTable+i+1)->start = mb->start + size;
 			(memTable+i+1)->size = mb->size - size;
@@ -53,6 +53,7 @@ void* malloc(size_t size) {
 			return (void*)mb->start;
 		}
 	}
+	return 0;
 }
 
 int free(void* ptr) {
@@ -66,11 +67,11 @@ int free(void* ptr) {
 	return -1;
 }
 
-void memcpy(void* src, void* dst, size_t length, int direction) {
+void memcpy(void* src, void* dst, size_t length) {
 	unsigned char* c_src = (unsigned char*)src;
 	unsigned char* c_dst = (unsigned char*)dst;
 	size_t i;
-	if (direction == 1){
+	if (src > dst){
 		for (i = 0; i < length; i++) {
 			*(unsigned char*)(c_dst+i) = *(unsigned char*)(c_src+i);
 		}
