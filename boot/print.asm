@@ -2,17 +2,17 @@ print:
     pusha
 
 .loop:
-    mov ah, 0x0e
-    mov al, [bx]
-    cmp al, 0x00
+    mov ah, 0x0e   ; set higher 8bits of ax to 0x0E to make sure it's tty mode
+    mov al, [bx]   ; set lower 8bits of ax to [bx], as the content to be printed
+    cmp al, 0x00   ; if it's NULL then stop
     je .end
-    int 0x10
-    add bx, 1
+    int 0x10       ; trigger 0x10 interrupt to print
+    add bx, 1      ; move bx to the next character
     jmp .loop
 
 .end:
     mov al, 0x0a
-    int 0x10
+    int 0x10       ; print '\n'
     mov al, 0x0d
     int 0x10
     popa

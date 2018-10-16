@@ -71,11 +71,15 @@ void memcpy(void* src, void* dst, size_t length) {
 	unsigned char* c_src = (unsigned char*)src;
 	unsigned char* c_dst = (unsigned char*)dst;
 	size_t i;
+	// the difference is to protect the source from being overwritten
+	// if src and dst overlap
 	if (src > dst){
+		// copy from head to tail
 		for (i = 0; i < length; i++) {
 			*(unsigned char*)(c_dst+i) = *(unsigned char*)(c_src+i);
 		}
 	} else {
+		// copy from tail to head
 		for (i = 0; i < length; i++){
 			*(unsigned char*)(c_dst+length-i-1) = *(unsigned char*)(c_src+length-i-1);
 		}

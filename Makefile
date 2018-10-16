@@ -16,7 +16,7 @@ debug: os-image kernel.elf
 
 clean:
 	rm $(OBJ)
-	rm boot/*.bin
+	rm boot/*.bin boot/*.o
 	rm *.bin os-image
 
 os-image: boot/boot.bin kernel.bin
