@@ -1,9 +1,9 @@
 #include <stdint.h>
-#include "../drivers/screen.h"
+#include <drivers/screen.h>
+#include <libs/string.h>
+#include <cpu/isr.h>
+#include <cpu/page.h>
 #include "memory.h"
-#include "../libs/string.h"
-#include "../cpu/isr.h"
-#include "../cpu/page.h"
 #include "interrupt_handlers.h"
 #define UNUSED(x) (void)(x)
 extern void isr_install();
@@ -18,7 +18,7 @@ void init(){
     register_interrupt_handlers();
     print("Interrupt handlers registerred\n");
 	//set_page();
-	clearScreen();
+	//clearScreen();
 }
 
 void shell () {
