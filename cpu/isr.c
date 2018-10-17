@@ -15,63 +15,69 @@
 isr_t interrupt_handlers[256];
 
 char* exceptions_messages[] = {
-	"Division By Zero",
-	"Debug",
-	"Non Maskable Interrupt",
-	"Breakpoint",
-	"Into Detected Overflow",
-	"Out of Bounds",
-	"Invalid Opcode",
-	"No Coprocessor",
+    "Division By Zero",
+    "Debug",
+    "Non Maskable Interrupt",
+    "Breakpoint",
+    "Into Detected Overflow",
+    "Out of Bounds",
+    "Invalid Opcode",
+    "No Coprocessor",
 
-	"Double Fault",
-	"Coprocessor Segment Overrun",
-	"Bad TSS",
-	"Segment Not Present",
-	"Stack Fault",
-	"General Protection",
-	"Page Fault",
-	"Unknown Interrupt",
-	
-	"Coprocessort Fault",
-	"Alignment Check",
-	"Machine Check",
-	"Reserved",
-	"Reserved",
-	"Reserved",
-	"Reserved",
-	"Reserved",
-	
-	"Reserved",
-	"Reserved",
-	"Reserved",
-	"Reserved",
-	"Reserved",
-	"Reserved",
-	"Reserved",
-	"Reserved"
+    "Double Fault",
+    "Coprocessor Segment Overrun",
+    "Bad TSS",
+    "Segment Not Present",
+    "Stack Fault",
+    "General Protection",
+    "Page Fault",
+    "Unknown Interrupt",
+    
+    "Coprocessort Fault",
+    "Alignment Check",
+    "Machine Check",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved"
 };
 
 void isr_handler(registers_t* reg) {
-	print("received interrupt: ");
-	char*hex = int_to_hex(reg->int_no);
-	print(hex);
-	free(hex);
-	print(exceptions_messages[reg->int_no]);
-	print("\n");
+    if (interrupt_handlers[reg->int_no]) {
+        isr_t handler = interrupt_handlers[reg->int_no];
+        handler(reg);
+    } else {
+        print("Unhandled interrupt: ");
+        char*hex = int_to_hex(reg->int_no);
+        print(hex);
+        free(hex);
+        print(exceptions_messages[reg->int_no]);
+        print("\n");
+    }
 }
 
 void register_interrupt_handler(uint8_t n, isr_t handler) {
-	interrupt_handlers[n] = handler;
+    interrupt_handlers[n] = handler;
 }
 
 void irq_handler(registers_t* reg) {
-	if (reg->int_no >= 40) portByteOut(PIC2_CMD, PIC_EOI);
-	portByteOut(PIC1_CMD, PIC_EOI);
+    if (reg->int_no >= 40)
+	    portByteOut(PIC2_CMD, PIC_EOI);
+    portByteOut(PIC1_CMD, PIC_EOI);
 
-	if (interrupt_handlers[reg->int_no]) {
-		isr_t handler = interrupt_handlers[reg->int_no];
-		handler(reg);
-	}
+    if (interrupt_handlers[reg->int_no]) {
+        isr_t handler = interrupt_handlers[reg->int_no];
+        handler(reg);
+    }
 }
 

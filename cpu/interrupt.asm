@@ -110,6 +110,7 @@ isr_install:
 		%assign i i+1
 	%endrep
 	call set_idt
+    sti
 
 	mov esp, ebp
 	pop ebp

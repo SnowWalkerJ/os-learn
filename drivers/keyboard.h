@@ -4,7 +4,7 @@
 #include "../cpu/port.h"
 #include "../cpu/isr.h"
 
-void init_keyboard();
+void keyboard_callback(registers_t*);
 void set_input_mask(char);
 
 #endif

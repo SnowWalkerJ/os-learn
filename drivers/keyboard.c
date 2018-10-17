@@ -27,12 +27,6 @@ const char sc_ascii[] = { '?', 0, '1', '2', '3', '4', '5', '6',
     'h', 'j', 'k', 'l', ';', '\'', '`', '?', '\\', 'z', 'x', 'c', 'v', 
     'b', 'n', 'm', ',', '.', '/', 0, '*', 0, ' '};
 
-void keyboard_callback(registers_t* regs);
-
-void init_keyboard() {
-	register_interrupt_handler(IRQ1, keyboard_callback);
-}
-
 void append(char key) {
 	if (key_buffer_cursor >= BUFFER_SIZE) return;
 	key_buffer[key_buffer_cursor++] = key;

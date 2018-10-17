@@ -1,6 +1,6 @@
 C_SOURCES = $(wildcard drivers/*.c kernel/*.c libs/*.c cpu/*.c)
 HEADERS = $(wildcard drivers/*.h kernel/*.h libs/*.h cpu/*.h)
-OBJ = $(C_SOURCES:.c=.o) cpu/interrupt.o
+OBJ = $(C_SOURCES:.c=.o) cpu/interrupt.o cpu/crx.o
 GDB = /usr/local/i386elfgcc/bin/i386-elf-gdb
 CC = /usr/local/i386elfgcc/bin/i386-elf-gcc
 CFLAGS = -m32 -fno-builtin -ffreestanding -fno-stack-protector -nostartfiles -nodefaultlibs \

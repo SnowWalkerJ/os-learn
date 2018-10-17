@@ -2,18 +2,30 @@
 #include "../drivers/screen.h"
 #include "memory.h"
 #include "../libs/string.h"
-#include "../drivers/keyboard.h"
 #include "../cpu/isr.h"
+#include "../cpu/page.h"
+#include "interrupt_handlers.h"
 #define UNUSED(x) (void)(x)
 extern void isr_install();
 
 
-void main(){
-	initMemTable();
-	clearScreen();
+void init(){
 	print("Kernel entered.\n");
+	initMemTable();
+    print("Memory initialized\n");
 	isr_install();
-	__asm__ __volatile__("sti");
-	init_keyboard();
-	print("MyOS> ");
+    print("ISR installed\n");
+    register_interrupt_handlers();
+    print("Interrupt handlers registerred\n");
+	//set_page();
+	clearScreen();
+}
+
+void shell () {
+	print("LearnOS> ");
+}
+
+void main () {
+    init();
+    shell();
 }
