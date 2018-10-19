@@ -7,7 +7,7 @@ gdt_null:
 
 gdt_code:
 	dw 0xffff    ; limit 0-15
-	dw 0	     ; base 0-15
+	dw 0         ; base 0-15
 	db 0         ; base 16-23
 	db 10011010b
 	db 11001111b

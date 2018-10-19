@@ -4,25 +4,26 @@
 #include <cpu/isr.h>
 #include <cpu/page.h>
 #include "memory.h"
+#include "kmemory.h"
 #include "interrupt_handlers.h"
 #define UNUSED(x) (void)(x)
 extern void isr_install();
 
 
 void init(){
-	print("Kernel entered.\n");
+	kprintAt("Kernel entered.\n", 1, 0);
 	initMemTable();
-    print("Memory initialized\n");
+    kprint("Memory initialized\n");
 	isr_install();
-    print("ISR installed\n");
+    kprint("ISR installed\n");
     register_interrupt_handlers();
-    print("Interrupt handlers registerred\n");
-	//set_page();
+    kprint("Interrupt handlers registerred\n");
+	init_page();
 	clearScreen();
 }
 
 void shell () {
-	print("LearnOS> ");
+	kprint("LearnOS> ");
 }
 
 void main () {

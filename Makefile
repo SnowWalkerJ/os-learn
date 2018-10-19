@@ -3,18 +3,20 @@ S_SOURCES = $(wildcard cpu/*.asm kernel/*.asm)
 HEADERS = $(wildcard drivers/*.h kernel/*.h libs/*.h cpu/*.h)
 OBJ = $(C_SOURCES:.c=.o) $(S_SOURCES:.asm=.o)
 GDB = /usr/local/i386elfgcc/bin/i386-elf-gdb
+GDB = gdb
 CC = /usr/local/i386elfgcc/bin/i386-elf-gcc
-CFLAGS = -m32 -fno-builtin -ffreestanding -fno-stack-protector -nostartfiles -nodefaultlibs \
+CFLAGS = -g -m32 -fno-builtin -ffreestanding -fno-stack-protector -nostartfiles -nodefaultlibs \
 	     -Wall -Wextra -Werror -fno-exceptions -I.
 
-.PHONY: all clean run
+.PHONY: all clean run debug
 all: run
 
 run: os-image
 	qemu-system-i386 -curses -fda $<
 
 debug: os-image kernel.elf
-	qemu-system-i386 -s -curses -fda os-image -d guest_errors,int & $(GDB) -ex "target remote localhost:1234" -ex "symbol-file kernel.elf"
+	# qemu-system-i386 -s -S -curses -fda os-image -d guest_errors,int & $(GDB) -ex "target remote localhost:1234" -ex "symbol-file kernel.elf"
+	qemu-system-i386 -s -S -curses -fda os-image -d guest_errors,int
 
 clean:
 	rm $(OBJ)

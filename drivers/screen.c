@@ -1,7 +1,9 @@
 #include <stddef.h>
-#include "../cpu/port.h"
+#include <cpu/port.h>
+#include <kernel/memory.h>
+#include <kernel/kmemory.h>
+#include<libs/string.h>
 #include "screen.h"
-#include "../kernel/memory.h"
 
 
 // Declaration of private functions
@@ -17,7 +19,7 @@ void handleScroll();
 
 // Public API functions
 
-void printAt(char* message, int row, int col) {
+void kprintAt(char* message, int row, int col) {
 	unsigned int offset;
 	if (row >= 0 && col >= 0) {
 		offset = getOffset(row, col);
@@ -35,8 +37,14 @@ void printAt(char* message, int row, int col) {
 	}
 }
 
-void print(char* message) {
-	printAt(message, -1, -1);
+void kprint(char* message) {
+	kprintAt(message, -1, -1);
+}
+
+void kprint_hex(uint32_t value) {
+    char* hex = int_to_hex(value);
+    kprint(hex);
+    free(hex);
 }
 
 void clearScreen() {

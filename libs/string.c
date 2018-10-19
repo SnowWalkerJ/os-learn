@@ -1,8 +1,8 @@
 #include "../kernel/memory.h"
 
 char* int_to_hex(uint32_t value) {
-	char *x = (char*)malloc(10*sizeof(char));
-	memcpy("00000000\n", x, 10*sizeof(char));
+	char *x = (char*)malloc(9*sizeof(char));
+	memcpy("00000000", x, 9*sizeof(char));
 	unsigned char* v = (unsigned char*)&value;
 	for (int i = 0; i < 4; i++) {
 		char c = v[i];

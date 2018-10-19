@@ -57,12 +57,10 @@ void isr_handler(registers_t* reg) {
         isr_t handler = interrupt_handlers[reg->int_no];
         handler(reg);
     } else {
-        print("Unhandled interrupt: ");
-        char*hex = int_to_hex(reg->int_no);
-        print(hex);
-        free(hex);
-        print(exceptions_messages[reg->int_no]);
-        print("\n");
+        kprint("Unhandled interrupt: ");
+        kprint_hex(reg->int_no);
+        kprint(exceptions_messages[reg->int_no]);
+        kprint("\n");
     }
 }
 

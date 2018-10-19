@@ -37,7 +37,7 @@ void show(char key) {
 	if (input_mask != 0) {
 		data[0] = input_mask;
 	}
-	print(data);
+	kprint(data);
 }
 
 void keyboard_callback(registers_t* regs) {
