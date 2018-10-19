@@ -18,7 +18,7 @@ void init(){
     register_interrupt_handlers();
     print("Interrupt handlers registerred\n");
 	//set_page();
-	//clearScreen();
+	clearScreen();
 }
 
 void shell () {

@@ -9,7 +9,7 @@ uint8_t portByteIn(uint16_t port) {
 	return result;
 }
 
-void portByteOut(uint32_t port, uint32_t data) {
+void portByteOut(uint16_t port, uint8_t data) {
 	uint16_t port16 = (uint16_t)(port & 0xFFFF);
 	uint8_t  data8  = (uint8_t) (data & 0xFF); 
 	__asm__ __volatile__("out %%al, %%dx" : : "a" (data8), "d" (port16));

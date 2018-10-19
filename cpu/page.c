@@ -15,7 +15,7 @@ void set_init_4m_paging() {
 	}
 	page_directory[0] = (uint32_t)page_table | 3;
 	for (i = 1; i < 1024; i++) {
-		page_directory[i] = 2;
+		page_directory[i] = 0b10;
 	}
 }
 

@@ -1,5 +1,5 @@
 C_SOURCES = $(wildcard drivers/*.c kernel/*.c libs/*.c cpu/*.c)
-S_SOURCES = $(wildcard cpu/*.asm)
+S_SOURCES = $(wildcard cpu/*.asm kernel/*.asm)
 HEADERS = $(wildcard drivers/*.h kernel/*.h libs/*.h cpu/*.h)
 OBJ = $(C_SOURCES:.c=.o) $(S_SOURCES:.asm=.o)
 GDB = /usr/local/i386elfgcc/bin/i386-elf-gdb
