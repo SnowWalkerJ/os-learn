@@ -41,12 +41,12 @@ void memcpy(void* src, void* dst, size_t count) {
     if (src < dst) {
         /* copy from tail to head */
         for (long i = count - 1; i >= 0; i--) {
-            *((char*)src + i) = *((char*)dst + i);
+            *((char*)dst + i) = *((char*)src + i);
         }
     } else {
         /* copy from head to tail */
         for (long i = 0; i < (long)count; i++) {
-            *((char*)src + i) = *((char*)dst + i);
+            *((char*)dst + i) = *((char*)src + i);
         }
     }
 }
