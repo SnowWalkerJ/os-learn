@@ -7,7 +7,7 @@
 /* TODO: disable paging if a new page table is not accessible */
 
 uint32_t *page_directory;
-int paging_disable_level = 1;
+int paging_disable_level;
 
 void init_page_directory();
 void set_init_4m_paging();
@@ -15,7 +15,8 @@ void enable_paging();
 void disable_paging();
 
 void init_page() {
-    assert(paging_disable_level == 1, "Paging enabled before initialization");
+    // assert(paging_disable_level == 1, "Paging enabled before initialization");
+    paging_disable_level = 1;
     init_page_directory();
 	set_init_4m_paging();
     enable_paging();

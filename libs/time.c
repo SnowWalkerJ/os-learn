@@ -16,7 +16,7 @@ time_t time() {
         .hour   = BCD_TO_BIN(READ_CMOS(4)),
         .day    = BCD_TO_BIN(READ_CMOS(7)),
         .month  = BCD_TO_BIN(READ_CMOS(8)),
-        .year   = BCD_TO_BIN(READ_CMOS(9)),
+        .year   = BCD_TO_BIN(READ_CMOS(9)) + BCD_TO_BIN(READ_CMOS(0x32))*100,
     };
     return tm;
 }

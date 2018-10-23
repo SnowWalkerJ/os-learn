@@ -15,15 +15,15 @@ void init_time();
 void init(){
     clearScreen();
 	kprintAt("Kernel entered.\n", 1, 0);
-    init_time();
 	initMemTable();
     kprint("Memory initialized\n");
 	isr_install();
     kprint("ISR installed\n");
     register_interrupt_handlers();
-    kprint("Interrupt handlers registerred\n");
+    kprint("Interrupt handlers registered\n");
 	init_page();
     run_tests();
+    init_time();
 }
 
 void init_time() {
