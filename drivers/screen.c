@@ -17,6 +17,8 @@ int getOffsetCol(unsigned int);
 void setEmpty();
 void handleScroll();
 
+uint8_t current_style = WHITE_ON_BLACK;
+
 // Public API functions
 
 void kprintAt(char* message, int row, int col) {
@@ -30,7 +32,7 @@ void kprintAt(char* message, int row, int col) {
 	}
 	int i = 0;
 	while (message[i] != 0) {
-		offset = putChar(message[i++], row, col, WHITE_ON_BLACK);
+		offset = putChar(message[i++], row, col, current_style);
 		row = getOffsetRow(offset);
 		col = getOffsetCol(offset);
 		setCursorOffset(offset);
@@ -50,6 +52,10 @@ void kprint_hex(uint32_t value) {
 void clearScreen() {
 	setEmpty(0, MAX_COLS*MAX_ROWS);
 	setCursorOffset(0);
+}
+
+void set_style(uint8_t style) {
+	current_style = style;
 }
 
 // Private functions
@@ -90,7 +96,7 @@ int putChar(char c, int row, int col, char format) {
 	if (row >= MAX_ROWS || col >= MAX_COLS) {
 		/*
 		address[2*MAX_COLS*MAX_ROWS-2] = 'E';
-		address[2*MAX_COLS*MAX_ROWS-1] = RED_ON_WHITE;
+		address[2*MAX_COLS*MAX_ROWS-1] = RED_ON_BLACK;
 		return getOffset(row, col);
 		*/
 		handleScroll();

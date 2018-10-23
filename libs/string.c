@@ -16,9 +16,20 @@ char* int_to_hex(uint32_t value) {
 	return x;
 }
 
-unsigned int strlen(char* string) {
+char* int_to_oct(uint32_t value) {
+	char* x = (char*)malloc(13 * sizeof(char));
+	uint32_t len = 0;
+	for (uint32_t m = value; m /= 10; len++);
+	for (int i = 0; i < (int)len; i++) {
+		x[len-i-1] = value % 10;
+		value /= 10;
+	}
+	x[len] = 0;
+	return x;
+}
+
+size_t strlen(char* string) {
 	unsigned int i;
 	for (i = 0; string[i] != 0; i++);
 	return i;
 }
-

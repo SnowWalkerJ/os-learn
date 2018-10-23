@@ -1,10 +1,9 @@
-C_SOURCES = $(wildcard drivers/*.c kernel/*.c libs/*.c cpu/*.c)
+C_SOURCES = $(wildcard drivers/*.c kernel/*.c libs/*.c cpu/*.c tests/*.c)
 S_SOURCES = $(wildcard cpu/*.asm kernel/*.asm)
-HEADERS = $(wildcard drivers/*.h kernel/*.h libs/*.h cpu/*.h)
+HEADERS = $(wildcard drivers/*.h kernel/*.h libs/*.h cpu/*.h tests/*.h)
 OBJ = $(C_SOURCES:.c=.o) $(S_SOURCES:.asm=.o)
-GDB = /usr/local/i386elfgcc/bin/i386-elf-gdb
 GDB = gdb
-CC = /usr/local/i386elfgcc/bin/i386-elf-gcc
+CC = i386-elf-gcc
 CFLAGS = -g -m32 -fno-builtin -ffreestanding -fno-stack-protector -nostartfiles -nodefaultlibs \
 	     -Wall -Wextra -Werror -fno-exceptions -I.
 
@@ -22,6 +21,7 @@ clean:
 	rm $(OBJ)
 	rm boot/*.bin boot/*.o
 	rm *.bin os-image
+	rm kernel.elf
 
 os-image: boot/boot.bin kernel.bin
 	cat $^ > $@
