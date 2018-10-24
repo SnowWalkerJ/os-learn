@@ -16,10 +16,11 @@ char* int_to_hex(uint32_t value) {
 	return x;
 }
 
-char* int_to_oct(uint32_t value) {
+char* int_to_oct(uint32_t value, uint32_t digits) {
 	char* x = (char*)malloc(13 * sizeof(char));
 	uint32_t len = 1;
 	for (uint32_t m = value; m /= 10; len++);
+	len = len > digits ? len : digits;
 	for (int i = 0; i < (int)len; i++) {
 		x[len-i-1] = (value % 10) + '0';
 		value /= 10;

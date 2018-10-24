@@ -59,7 +59,7 @@ char* strftime(time_t tm, char* format) {
                 state = 0;
                 i--;
             }
-            char* tmp = int_to_oct(n);
+            char* tmp = int_to_oct(n, 2);
             size_t len = strlen(tmp);
             memcpy(tmp, result+j, len);
             free(tmp);
