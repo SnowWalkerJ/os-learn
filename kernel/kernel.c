@@ -4,6 +4,7 @@
 #include <libs/time.h>
 #include <cpu/isr.h>
 #include <cpu/page.h>
+#include <cpu/gdt.h>
 #include <tests/testings.h>
 #include "memory.h"
 #include "kmemory.h"
@@ -13,6 +14,7 @@ extern void isr_install();
 void init_time();
 
 void init(){
+    init_gdt();
     clearScreen();
 	kprintAt("Kernel entered.\n", 1, 0);
 	initMemTable();
