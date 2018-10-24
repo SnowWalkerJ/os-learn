@@ -1,6 +1,6 @@
 #include "gdt.h"
 
-#define GDT_ENTRIES 4
+#define GDT_ENTRIES 6
 gdt_gate_t gdt_gates[GDT_ENTRIES];
 gdt_descriptor_t gdt_descriptor;
 
@@ -8,11 +8,13 @@ extern void gdt_flush();
 
 void init_gdt () {
     /* reset the gdt descriptors and gates so that they can be controlled by the kernel */
-    set_gdt_gate(0, 0, 0, 0, 0);                                       // NULL segment
-    set_gdt_gate(1, 0, 0xfffff, make_access(1, 0, 1, 0, 1), 0b1100);     // code segment
-    set_gdt_gate(2, 0, 0xfffff, make_access(1, 0, 0, 0, 1), 0b1100);     // data segment
+    set_gdt_gate(0, 0, 0, 0, 0);                                         // NULL segment
+    set_gdt_gate(1, 0, 0xfffff, make_access(1, 0, 1, 0, 1), 0b1100);     // ring0 code segment
+    set_gdt_gate(2, 0, 0xfffff, make_access(1, 0, 0, 0, 1), 0b1100);     // ring0 data segment
+    set_gdt_gate(3, 0, 0xfffff, make_access(1, 3, 1, 0, 1), 0b1100);     // ring3 code segment
+    set_gdt_gate(4, 0, 0xfffff, make_access(1, 3, 0, 0, 1), 0b1100);     // ring3 data segment
     gdt_descriptor.offset = (uint32_t)gdt_gates;
-    gdt_descriptor.limit = (uint16_t)(GDT_ENTRIES * 8);
+    gdt_descriptor.limit = (uint16_t)(GDT_ENTRIES * sizeof(gdt_gate_t));
     gdt_flush();
 }
 
