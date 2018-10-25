@@ -10,7 +10,7 @@
 
 unsigned int getCursorOffset();
 void setCursorOffset(unsigned int);
-int putChar(char, int, int, char);
+int putCharAt(char, int, int, char);
 unsigned int getOffset(int, int);
 int getOffsetRow(unsigned int);
 int getOffsetCol(unsigned int);
@@ -32,10 +32,9 @@ void kprintAt(char* message, int row, int col) {
 	}
 	int i = 0;
 	while (message[i] != 0) {
-		offset = putChar(message[i++], row, col, current_style);
+		offset = putCharAt(message[i++], row, col, current_style);
 		row = getOffsetRow(offset);
 		col = getOffsetCol(offset);
-		setCursorOffset(offset);
 	}
 }
 
@@ -47,6 +46,10 @@ void kprint_hex(uint32_t value) {
     char* hex = int_to_hex(value);
     kprint(hex);
     free(hex);
+}
+
+void kput_char(char ch) {
+	putCharAt(ch, -1, -1, current_style);
 }
 
 void clearScreen() {
@@ -88,9 +91,9 @@ int getOffsetCol(unsigned int offset) {
 	return (offset / 2) % MAX_COLS;
 }
 
-int putChar(char c, int row, int col, char format) {
+int putCharAt(char c, int row, int col, char style) {
 	unsigned char* address = (unsigned char*)VIDEO_ADDRESS;
-	if (!format) format = WHITE_ON_BLACK;
+	if (!style) style = WHITE_ON_BLACK;
 
 	//Error handling
 	if (row >= MAX_ROWS || col >= MAX_COLS) {
@@ -115,9 +118,10 @@ int putChar(char c, int row, int col, char format) {
 		offset = getOffset(row + 1, 0);
 	} else {
 		address[offset] = c;
-		address[offset + 1] = format;
+		address[offset + 1] = style;
 		offset += 2;
 	}
+	setCursorOffset(offset);
 	return offset;
 }
 

@@ -35,6 +35,7 @@
 void kprint(char*);
 void kprint_hex(uint32_t);
 void kprintAt(char*, int, int);
+void kput_char(char);
 void backspace();
 void clearScreen();
 void set_style(uint8_t);

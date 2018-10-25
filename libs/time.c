@@ -1,6 +1,6 @@
 #include "time.h"
 #include <stddef.h>
-#include <drivers/cmos.h>
+#include <drivers/rtc.h>
 #include <kernel/memory.h>
 #include <libs/string.h>
 #define days_in_year(year) (is_leap_year(year) ? 366 : 365)
@@ -10,15 +10,18 @@ int is_leap_year(int);
 int add_with_carry(int, int, int, int*);
 
 time_t time() {
-    time_t tm = {
-        .second = BCD_TO_BIN(READ_CMOS(0)),
-        .minute = BCD_TO_BIN(READ_CMOS(2)),
-        .hour   = BCD_TO_BIN(READ_CMOS(4)),
-        .day    = BCD_TO_BIN(READ_CMOS(7)),
-        .month  = BCD_TO_BIN(READ_CMOS(8)),
-        .year   = BCD_TO_BIN(READ_CMOS(9)) + BCD_TO_BIN(READ_CMOS(0x32))*100,
-    };
-    return tm;
+    time_t last_time = _get_time_from_rtc(), this_time;
+    while (1) {
+        this_time = _get_time_from_rtc();
+        if (this_time.second == last_time.second &&
+            this_time.minute == last_time.minute &&
+            this_time.hour   == last_time.hour &&
+            this_time.day    == last_time.day) {
+                break;
+            }
+        last_time = this_time;
+    }
+    return this_time;
 }
 
 char* strftime(time_t tm, char* format) {
@@ -180,4 +183,16 @@ int add_with_carry(int val1, int val2, int base, int* carry) {
     int result = val1 + val2;
     *carry = result / base;
     return result % base;
+}
+
+time_t _get_time_from_rtc() {
+    time_t tm = {
+        .second = BCD_TO_BIN(read_rtc_register(0)),
+        .minute = BCD_TO_BIN(read_rtc_register(2)),
+        .hour   = BCD_TO_BIN(read_rtc_register(4)),
+        .day    = BCD_TO_BIN(read_rtc_register(7)),
+        .month  = BCD_TO_BIN(read_rtc_register(8)),
+        .year   = BCD_TO_BIN(read_rtc_register(9)) + BCD_TO_BIN(read_rtc_register(0x32))*100,
+    };
+    return tm;
 }

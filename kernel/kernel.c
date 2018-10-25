@@ -2,6 +2,7 @@
 #include <drivers/screen.h>
 #include <libs/string.h>
 #include <libs/time.h>
+#include <libs/stdio.h>
 #include <cpu/isr.h>
 #include <cpu/page.h>
 #include <cpu/gdt.h>
@@ -31,9 +32,7 @@ void init(){
 void init_time() {
     time_t tm = time();
     char* text = strftime(tm, "%Y-%m-%d %H:%M:%S");
-    kprint("Boot time: ");
-    kprint(text);
-    kprint(" UTC\n");
+    printf("Boot time: %s UTC\n", text);
     free(text);
 }
 
