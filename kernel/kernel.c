@@ -33,7 +33,7 @@ void init_time() {
     char* text = strftime(tm, "%Y-%m-%d %H:%M:%S");
     kprint("Boot time: ");
     kprint(text);
-    kprint("\n");
+    kprint(" UTC\n");
     free(text);
 }
 
