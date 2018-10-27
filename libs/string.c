@@ -1,4 +1,6 @@
-#include "../kernel/memory.h"
+#include <libs/stdlib.h>
+#include <kernel/memory.h>
+
 
 char* int_to_hex(uint32_t value) {
 	char *x = (char*)malloc(9*sizeof(char));

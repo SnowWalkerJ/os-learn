@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include "memory.h"
+#include <libs/stdlib.h>
 
 #define START_ADDR 0x10000
 #define MAX_SIZE 0x80000000

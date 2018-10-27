@@ -3,11 +3,13 @@
 #include <drivers/rtc.h>
 #include <kernel/memory.h>
 #include <libs/string.h>
+#include <libs/stdlib.h>
 #define days_in_year(year) (is_leap_year(year) ? 366 : 365)
 
 int days_in_month(int, int);
 int is_leap_year(int);
 int add_with_carry(int, int, int, int*);
+time_t _get_time_from_rtc();
 
 time_t time() {
     time_t last_time = _get_time_from_rtc(), this_time;
@@ -74,9 +76,59 @@ char* strftime(time_t tm, char* format) {
     return result;
 }
 
-// time_t strptime(char* content, char* format) {
-//     return NULL;
-// }
+time_t strptime(char* content, char* format) {
+    size_t len0 = strlen(format);
+    time_t tm;
+    int state = 0;
+    size_t ci, fi;
+    for (fi = ci = 0; fi < len0; fi++) {
+        char fch = format[fi], cch = content[ci];
+        if (state == 0) {
+            if (fch == '%') {
+                state = 1;
+                continue;
+            } else {
+                ci++;
+            }
+        } else {
+            switch (fch) {
+            case 'Y':
+                tm.year = (content[ci] - '0') * 1000 +
+                          (content[ci+1] - '0') * 100 +
+                          (content[ci+2] - '0') * 10 +
+                          (content[ci+3] - '0')
+                ci += 4;
+                break;
+            case 'm':
+                tm.month = (content[ci] - '0') * 10 +
+                           (content[ci+1] - '0')
+                ci += 2;
+                break;
+            case 'd':
+                tm.day = (content[ci] - '0') * 10 +
+                         (content[ci+1] - '0')
+                ci += 2;
+                break;
+            case 'H':
+                tm.hour = (content[ci] - '0') * 10 +
+                          (content[ci+1] - '0')
+                ci += 2;
+                break;
+            case 'M':
+                tm.minute = (content[ci] - '0') * 10 +
+                            (content[ci+1] - '0')
+                ci += 2;
+                break;
+            case 'S':
+                tm.second = (content[ci] - '0') * 10 +
+                            (content[ci+1] - '0')
+                ci += 2;
+                break;
+            }
+        }
+    }
+    return tm;
+}
 
 time_t change_time(time_t base, time_delta_t delta) {
     int carry;

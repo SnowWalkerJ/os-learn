@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <cpu/port.h>
 #include <kernel/memory.h>
-#include <kernel/kmemory.h>
+#include <libs/stdlib.h>
 #include<libs/string.h>
 #include "screen.h"
 
@@ -127,10 +127,8 @@ int putCharAt(char c, int row, int col, char style) {
 
 void setEmpty(unsigned int begin, size_t length) {
 	unsigned char* addr = (unsigned char*)VIDEO_ADDRESS;
-	for (size_t i = 0; i < length; i++) {
-		addr[begin + i * 2] = ' ';
-		addr[begin + i * 2 + 1] = WHITE_ON_BLACK;
-	}
+	char tmp[2] = {' ', WHITE_ON_BLACK};
+	memsetw(addr+begin, *(uint16_t*)tmp, length);
 }
 
 void handleScroll(){

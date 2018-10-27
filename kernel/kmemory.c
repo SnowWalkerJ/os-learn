@@ -1,3 +1,4 @@
+#include <libs/stdlib.h>
 #include "kmemory.h"
 #include "console.h"
 
@@ -7,8 +8,8 @@ void set_free(void*, uint32_t);
 uint32_t get_value(void*, uint32_t);
 
 void init_memory_table() {
-    memset(L1_TABLE, 0, TABLE_SIZE);
-    memset(L2_TABLE, 0, TABLE_SIZE * TABLE_SIZE * 64);
+    memsetb(L1_TABLE, 0, TABLE_SIZE);
+    memsetb(L2_TABLE, 0, TABLE_SIZE * TABLE_SIZE * 64);
     set_occupied(L1_TABLE, 0); // reserve the first 4M for kernel
 }
 
@@ -28,26 +29,6 @@ void kfree_page(void* addr) {
     set_free(L2_TABLE, id2);
     if (get_value(L2_TABLE, id2) == 0) {
         set_free(L1_TABLE, id1);
-    }
-}
-
-void memset(void* addr, char value, size_t count) {
-    for (size_t i = 0; i < count; i++) {
-        *((char*)addr + i) = value;
-    }
-}
-
-void memcpy(void* src, void* dst, size_t count) {
-    if (src < dst) {
-        /* copy from tail to head */
-        for (long i = count - 1; i >= 0; i--) {
-            *((char*)dst + i) = *((char*)src + i);
-        }
-    } else {
-        /* copy from head to tail */
-        for (long i = 0; i < (long)count; i++) {
-            *((char*)dst + i) = *((char*)src + i);
-        }
     }
 }
 
