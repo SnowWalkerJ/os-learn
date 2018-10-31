@@ -36,3 +36,9 @@ size_t strlen(char* string) {
 	for (i = 0; string[i] != 0; i++);
 	return i;
 }
+
+int strcmp(char* str1, char*str2) {
+	for(; !(*str1 == 0 || *str2 == 0 || *str1 != *str2); str1++, str2++)
+		;
+	return (*str1 - *str2);
+}
