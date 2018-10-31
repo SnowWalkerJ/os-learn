@@ -3,6 +3,7 @@
 #include <libs/stdio.h>
 #include <stddef.h>
 char* test_paging();
+char* test_memcpy();
 
 void run_one_test(char* func(), char* name, int fatal) {
     char* result = func();
@@ -29,5 +30,5 @@ char* test_fake_error() {
 
 void run_tests() {
     run_one_test(test_paging, "Memory Paging", 1);
-    run_one_test(test_fake_error, "Fake Error", 0);
+    run_one_test(test_memcpy, "Memcpy", 1);
 }

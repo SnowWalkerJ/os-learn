@@ -19,15 +19,23 @@ void memsetw(void* addr, uint16_t value, size_t count) {
 }
 
 void memcpy(void* src, void* dst, size_t count) {
-    if (src < dst)
-        asm("std");
-    else
-        asm("cld");
-    asm("mov %0, %%edi;"
-        "mov %1, %%esi;"
-        "rep;"
-        "movsb" ::
+    if (src < dst) {
+        dst = (void*)((char*)dst + count - 1);
+        src = (void*)((char*)src + count) - 1;
+        asm volatile("std;"
+        "mov %0, %%esi;"
+        "mov %1, %%edi;"
+        "rep movsb" ::
         "r" (src),
         "r" (dst),
         "c" (count));
+    } else {
+        asm volatile("cld;"
+        "mov %0, %%esi;"
+        "mov %1, %%edi;"
+        "rep movsb" ::
+        "r" (src),
+        "r" (dst),
+        "c" (count));
+    }
 }

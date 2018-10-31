@@ -4,6 +4,7 @@
 
 #define START_ADDR 0x10000
 #define MAX_SIZE 0x80000000
+#define TABLE_COUNT 3000
 
 typedef struct{
 	uint32_t start;
@@ -12,43 +13,42 @@ typedef struct{
 }__attribute__((packed)) MemoryBlock;
 
 #define MB_SIZE sizeof(MemoryBlock)
-#define MEM_TABLE_START ((MemoryBlock*)0x0f000)
 
-static MemoryBlock *memTable = MEM_TABLE_START;
+static MemoryBlock memTable[TABLE_COUNT];
 static uint32_t numBlocks = 1;
 
 void recycleMemBlock(uint32_t i){
-	(memTable+i)->used = 0;
-	if (i > 0 && !(memTable+i-1)->used) {
-		(memTable+i-1)->size += (memTable+i)->size;
+	memTable[i].used = 0;
+	if (i > 0 && !memTable[i-1].used) {
+		memTable[i-1].size += memTable[i].size;
 		i--;
-		memcpy(memTable+(i+2)*MB_SIZE, memTable+(i+1)*MB_SIZE, numBlocks-i-1);
+		memcpy(memTable+i+2, memTable+i+1, (numBlocks-i-1)*MB_SIZE);
 		numBlocks--;
 	}
 	if (!(memTable+i+1)->used) {
-		(memTable+i)->size += (memTable+i+1)->size;
-		memcpy(memTable+(i+2)*MB_SIZE, memTable+(i+1)*MB_SIZE, numBlocks-i-1);
+		memTable[i].size += memTable[i+1].size;
+		memcpy(memTable+i+2, memTable+i+1, (numBlocks-i-1)*MB_SIZE);
 		numBlocks--;
 	}
 }
 
 void initMemTable() {
-	memTable->start = START_ADDR;
-	memTable->size = MAX_SIZE;
-	memTable->used = 0;
+	memTable[0].start = START_ADDR;
+	memTable[0].size = MAX_SIZE;
+	memTable[0].used = 0;
 	numBlocks = 1;
 }
 
 void* malloc(size_t size) {
 	size_t i = 0;
-	while(i < (START_ADDR - (int)MEM_TABLE_START) / MB_SIZE) {
+	while(i < TABLE_COUNT) {
 		MemoryBlock *mb = memTable+i;
 		if (mb->used) i++;
 		else if (mb->size >= size) {
 			memcpy(mb, (mb+1), MB_SIZE*(numBlocks-i+1));
 			numBlocks++;
-			(memTable+i+1)->start = mb->start + size;
-			(memTable+i+1)->size = mb->size - size;
+			memTable[i+1].start = mb->start + size;
+			memTable[i+1].size = mb->size - size;
 			mb->size = size;
 			mb->used = 1;
 			return (void*)mb->start;
