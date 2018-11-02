@@ -1,21 +1,20 @@
 load_disk:
 	; arguments:
-	;     dh: mumber of sectors to read
-	;     dl: # of disk
-	;     bx: target address
+    ;     al: number of sectors to read
+    ;     bx: target address in memory
+    ;     cl: start number of sector
+    ;     ch: cylinder
+	;     dh: head
+	;     dl: disk
     pusha
-    push dx
+    push ax
     mov ah, 0x02   ; 'read' command
-    mov al, dh     ; number of sectors to read
-    mov cl, 0x02   ; start # of sector
-    mov ch, 0x00   ; cylinder
-    mov dh, 0x00   ; head number
     int 0x13
     
     jc .disk_error
     
     pop dx
-    cmp al, dh
+    cmp al, dl
     jne .sector_error
     
     popa
@@ -24,8 +23,6 @@ load_disk:
 .disk_error:
     mov bx, DISK_ERROR_MSG
     call print
-	mov bx, ax
-	call print_hex
     jmp .end
 
 .sector_error:
