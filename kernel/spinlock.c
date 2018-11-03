@@ -1,5 +1,5 @@
-#include "spinlock.h"
-#include <cpu/x86.h>
+#include <kernel/spinlock.h>
+#include <kernel/x86.h>
 #ifdef NOT_COMPLETE
 
 /* private functions declared here */

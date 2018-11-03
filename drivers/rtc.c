@@ -1,7 +1,7 @@
 #include <stdint.h>
-#include "rtc.h"
-#include <cpu/port.h>
-#include <cpu/x86.h>
+#include <drivers/rtc.h>
+#include <kernel/port.h>
+#include <kernel/x86.h>
 
 #define CMOS_ADDR 0x70
 #define CMOS_DATA 0x71

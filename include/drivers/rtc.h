@@ -1,6 +1,6 @@
 #ifndef RTC_H
 #define RTC_H
-#include <cpu/port.h>
+#include <kernel/port.h>
 #include <stdint.h>
 
 #define BCD_TO_BIN(val) (((val) & 0xf) + (((val) >> 4) * 10))

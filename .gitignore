@@ -3,3 +3,4 @@
 *.elf
 os-image
 .DS_Store
+.vscode

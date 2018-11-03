@@ -1,7 +1,7 @@
-#include "stdarg.h"
-#include "stdio.h"
+#include <stdarg.h>
+#include <libs/stdio.h>
 #include <kernel/memory.h>
-#include "string.h"
+#include <libs/string.h>
 #include <drivers/screen.h>
 
 

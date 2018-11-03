@@ -1,8 +1,8 @@
-#include "keyboard.h"
-#include "ps2.h"
-#include "../cpu/port.h"
-#include "../cpu/isr.h"
-#include "../drivers/screen.h"
+#include <drivers/keyboard.h>
+#include <drivers/ps2.h>
+#include <kernel/port.h>
+#include <kernel/isr.h>
+#include <drivers/screen.h>
 #define UNUSED(x) (void)(x)
 
 #define BACKSPACE 0x0E

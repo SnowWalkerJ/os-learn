@@ -1,5 +1,5 @@
 #include <libs/assert.h>
-#include <cpu/page.h>
+#include <kernel/page.h>
 #include <drivers/screen.h>
 #include <stddef.h>
 

@@ -3,13 +3,13 @@
 #include <libs/string.h>
 #include <libs/time.h>
 #include <libs/stdio.h>
-#include <cpu/isr.h>
-#include <cpu/page.h>
-#include <cpu/gdt.h>
+#include <kernel/isr.h>
+#include <kernel/page.h>
+#include <kernel/gdt.h>
 #include <tests/testings.h>
-#include "memory.h"
-#include "kmemory.h"
-#include "interrupt_handlers.h"
+#include <kernel/memory.h>
+#include <kernel/kmemory.h>
+#include <kernel/interrupt_handlers.h>
 #define UNUSED(x) (void)(x)
 extern void isr_install();
 void init_time();

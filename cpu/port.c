@@ -1,7 +1,7 @@
-#include "port.h"
-#include "../kernel/memory.h"
-#include "../drivers/screen.h"
-#include "../libs/string.h"
+#include <kernel/port.h>
+#include <kernel/memory.h>
+#include <drivers/screen.h>
+#include <libs/string.h>
 
 uint8_t portByteIn(uint16_t port) {
 	uint8_t result;

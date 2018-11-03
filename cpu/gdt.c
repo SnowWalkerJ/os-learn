@@ -1,4 +1,4 @@
-#include "gdt.h"
+#include <kernel/gdt.h>
 
 #define GDT_ENTRIES 6
 gdt_gate_t gdt_gates[GDT_ENTRIES];

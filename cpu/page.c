@@ -1,10 +1,9 @@
-#include "page.h"
-#include "crx.h"
+#include <kernel/page.h>
+#include <kernel/crx.h>
 #include <kernel/console.h>
 #include <kernel/kmemory.h>
 #include <libs/assert.h>
 
-/* TODO: disable paging if a new page table is not accessible */
 
 uint32_t *page_directory;
 int paging_disable_level;

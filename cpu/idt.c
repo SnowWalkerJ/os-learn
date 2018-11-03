@@ -1,8 +1,8 @@
-#include "idt.h"
-#include "bits.h"
-#include "../kernel/memory.h"
-#include "../libs/string.h"
-#include "../drivers/screen.h"
+#include <kernel/idt.h>
+#include <kernel/bits.h>
+#include <kernel/memory.h>
+#include <libs/string.h>
+#include <drivers/screen.h>
 
 #define IDT_ENTRIES 256
 idt_gate_t idt[IDT_ENTRIES];

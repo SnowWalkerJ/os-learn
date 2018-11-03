@@ -1,5 +1,5 @@
 #include <stddef.h>
-#include "memory.h"
+#include <kernel/memory.h>
 #include <libs/stdlib.h>
 
 #define START_ADDR 0x10000

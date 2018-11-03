@@ -1,6 +1,6 @@
 #include <libs/stdlib.h>
-#include "kmemory.h"
-#include "console.h"
+#include <kernel/kmemory.h>
+#include <kernel/console.h>
 
 uint32_t search_table(uint8_t*);
 void set_occupied(void*, uint32_t);

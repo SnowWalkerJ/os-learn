@@ -1,10 +1,10 @@
-#include<stddef.h>
-#include "isr.h"
-#include "idt.h"
-#include "../drivers/screen.h"
-#include "../kernel/memory.h"
-#include "../libs/string.h"
-#include "port.h"
+#include <stddef.h>
+#include <kernel/isr.h>
+#include <kernel/idt.h>
+#include <drivers/screen.h>
+#include <kernel/memory.h>
+#include <libs/string.h>
+#include <kernel/port.h>
 
 #define PIC1_CMD 0x20
 #define PIC2_CMD 0xA0

@@ -1,9 +1,9 @@
 #include <stddef.h>
-#include <cpu/port.h>
+#include <kernel/port.h>
 #include <kernel/memory.h>
 #include <libs/stdlib.h>
-#include<libs/string.h>
-#include "screen.h"
+#include <libs/string.h>
+#include <drivers/screen.h>
 
 
 // Declaration of private functions

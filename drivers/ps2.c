@@ -1,5 +1,5 @@
-#include "ps2.h"
-#include "../cpu/port.h"
+#include <drivers/ps2.h>
+#include <kernel/port.h>
 
 uint8_t send_ps2_command(uint8_t cmd) {
 	portByteOut(PS2_CMD, cmd);

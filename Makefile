@@ -5,7 +5,7 @@ OBJ = $(C_SOURCES:.c=.o) $(S_SOURCES:.asm=.o)
 GDB = gdb
 CC = i386-elf-gcc
 CFLAGS = -g -m32 -fno-builtin -ffreestanding -fno-stack-protector -nostartfiles -nodefaultlibs \
-	     -Wall -Wextra -Werror -fno-exceptions -I.
+	     -Wall -Wextra -Werror -fno-exceptions -Iinclude
 
 .PHONY: all clean run debug
 all: run
