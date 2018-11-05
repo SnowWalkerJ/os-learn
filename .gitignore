@@ -4,3 +4,6 @@
 os-image
 .DS_Store
 .vscode
+*.iso
+dist/
+build/
