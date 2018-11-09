@@ -21,7 +21,8 @@ struct bucket_dir {
 };
 
 
-struct bucket_dir bucket_directory[9];
+#define DIRS 9
+struct bucket_dir bucket_directory[DIRS];
 
 struct bucket_desc* free_buckets = NULL;
 
@@ -41,9 +42,9 @@ void init_malloc() {
     bucket_directory[5].head = (struct bucket_desc*)NULL;
     bucket_directory[6].size = 2048;
     bucket_directory[6].head = (struct bucket_desc*)NULL;
-    bucket_directory[7].size = 4096;
+    bucket_directory[7].size = 9999;          // This is reserved for too small buckets
     bucket_directory[7].head = (struct bucket_desc*)NULL;
-    bucket_directory[8].size = 0;
+    bucket_directory[8].size = 0;             // End of directory
     bucket_directory[8].head = (struct bucket_desc*)NULL;
 }
 
@@ -53,8 +54,7 @@ void init_malloc() {
                             (size) <= 128 ? 2: \
                                 (size) <= 256 ? 3: \
                                     (size) <= 512 ? 4 : \
-                                        (size) <= 1024 ? 5 : \
-                                            (size) <= 2048 ? 6 : 7
+                                        (size) <= 1024 ? 5 : 6
 
 
 struct bucket_desc* find_bucket(int size) {
@@ -104,7 +104,7 @@ void remove_from_directory(struct bucket_desc* bucket) {
 
 void insert_into_directory(struct bucket_desc* bucket) {
     int dir_id = DIR_NR(bucket->size) - 1;
-    if (dir_id < 0) return;
+    if (dir_id < 0) dir_id = DIRS - 2;
     bucket->next = bucket_directory[dir_id].head;
     bucket_directory[dir_id].head = bucket;
 }
