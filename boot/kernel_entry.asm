@@ -27,6 +27,7 @@ detect_drive_infos:
 	push drive_infos+14
 	mov dl, 0x81
 	call get_drive_infos
+	ret
 
 [bits 32]
 BEGIN_PM:                  ; this is where the program jumps to after entering protected mode

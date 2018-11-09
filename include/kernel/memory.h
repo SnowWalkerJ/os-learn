@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-void initMemTable();
+void init_malloc();
 void* malloc(size_t);
-int free(void*);
+void free(void*);
 #endif

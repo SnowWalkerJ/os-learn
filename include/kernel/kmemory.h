@@ -8,7 +8,7 @@
 #define L2_TABLE (void*)0x10010
 #define TABLE_SIZE 128
 
-void init_mem_tables();
+void init_memory_tables();
 void* kalloc_page();
 void kfree_page(void*);
 

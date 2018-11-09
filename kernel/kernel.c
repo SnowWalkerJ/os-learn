@@ -18,7 +18,8 @@ void init(){
     init_gdt();
     clearScreen();
 	kprintAt("Kernel entered.\n", 1, 0);
-	initMemTable();
+    init_memory_tables();
+    init_malloc();
     kprint("Memory initialized\n");
 	isr_install();
     kprint("ISR installed\n");

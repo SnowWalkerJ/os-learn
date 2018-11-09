@@ -19,9 +19,9 @@ makedir:
 run: $(DIST_DIR)/os-image
 	qemu-system-i386 -curses -fda $<
 
-debug: os-image kernel.elf
+debug: $(DIST_DIR)/os-image $(TARGET_DIR)/kernel.elf
 	# qemu-system-i386 -s -S -curses -fda os-image -d guest_errors,int & $(GDB) -ex "target remote localhost:1234" -ex "symbol-file kernel.elf"
-	qemu-system-i386 -s -S -curses -fda os-image -d guest_errors,int
+	qemu-system-i386 -s -S -curses -fda $(DIST_DIR)/os-image -d guest_errors,int
 
 clean:
 	rm -r build/*
@@ -29,8 +29,7 @@ clean:
 tools: makedir $(DIST_DIR)/tools/mkfs
 
 $(DIST_DIR)/tools/mkfs: tools/mkfs.c tools/utils/argparse.c fs/bitmap.c
-	gcc $^ -Iinclude -o $@
-
+	gcc -m32 $^ -Iinclude -o $@
 
 $(DIST_DIR)/os-image: $(TARGET_DIR)/boot/boot.bin $(TARGET_DIR)/kernel.bin
 	cat $^ > $@

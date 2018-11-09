@@ -7,7 +7,7 @@ void set_occupied(void*, uint32_t);
 void set_free(void*, uint32_t);
 uint32_t get_value(void*, uint32_t);
 
-void init_memory_table() {
+void init_memory_tables() {
     memsetb(L1_TABLE, 0, TABLE_SIZE);
     memsetb(L2_TABLE, 0, TABLE_SIZE * TABLE_SIZE * 64);
     set_occupied(L1_TABLE, 0); // reserve the first 4M for kernel
