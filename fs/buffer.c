@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <fs/buffer.h>
+#include <kernel/memory.h>
 #include <kernel/sched.h>
 #include <drivers/blk.h>
 
@@ -101,24 +102,25 @@ void rlsblk (struct buffer_head* bh) {
 
 
 void init_block_buffers () {
-    *&free_buffers = malloc(sizeof(struct buffer_head) * NR_BUFFER);
-    void* data = malloc(4096 * NR_BUFFER);               // max block size is 4096, this may be a waste
+    struct buffer_head* last_bh = NULL, bh;
+    free_buffers = NULL;
     for (int i = 0; i < NR_BUFFER; i++) {
-        struct buffer_head* bh = free_buffers + i;
+        bh = malloc(sizeof(struct buffer_head));
+        if (!free_buffers) {
+            free_buffers = last_bh = bh;
+        }
         bh->block = 0;
         bh->count = 0;
-        bh->data = data + i * 4096;
+        bh->data = malloc(4096);
         bh->dev = 0;
         bh->dirty = 0;
         bh->locked = 0;
         bh->next = NULL;
-        bh->next_free = bh + 1;
-        bh->prev_free = bh - 1;
+        last_bh->next_free = bh;
+        bh->prev_free = last_bh;
+        bh->next_free = free_blocks;
         bh->uptodate = 0;
-        if (i == NR_BUFFER - 1) {
-            bh->next_free = free_buffers;
-            free_buffers->prev_free = bh;
-        }
+        last_bh = bh;
     }
     for (int i = 0; i < NR_HASHTABLE; i++) {
         hashtable[i] = NULL;
