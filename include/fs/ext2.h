@@ -163,18 +163,7 @@ struct inode {
                                     //  not counting the actual inode structure nor directory entries linking to the inode.
     uint32_t flags;
     uint8_t ossv1[4];               // 	Operating System Specific value #1
-    uint32_t dirct_block0;          // 	Direct Block Pointer 0 - 11
-    uint32_t dirct_block1;
-    uint32_t dirct_block2;
-    uint32_t dirct_block3;
-    uint32_t dirct_block4;
-    uint32_t dirct_block5;
-    uint32_t dirct_block6;
-    uint32_t dirct_block7;
-    uint32_t dirct_block8;
-    uint32_t dirct_block9;
-    uint32_t dirct_block10;
-    uint32_t dirct_block11;
+    uint32_t direct_block[12];          // Direct Block Pointer 0 - 11
     uint32_t singly_indirect_block;     // Singly Indirect Block Pointer (Points to a block that is a list of block pointers to data)
     uint32_t doubly_indirect_block;     // Doubly Indirect Block Pointer (Points to a block that is a list of block pointers to Singly Indirect Blocks)
     uint32_t triply_indirect_block;     // Triply Indirect Block Pointer (Points to a block that is a list of block pointers to Doubly Indirect Blocks)
