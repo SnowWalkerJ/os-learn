@@ -31,8 +31,10 @@ void init(){
 }
 
 void init_time() {
-    time_t tm = time();
-    char* text = strftime(tm, "%Y-%m-%d %H:%M:%S");
+    time_t tm;
+    time(&tm);
+    char* text = (char*)malloc(20);
+    strftime(&tm, "%Y-%m-%d %H:%M:%S", text);
     printf("Boot time: %s UTC\n", text);
     free(text);
 }

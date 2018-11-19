@@ -182,7 +182,7 @@ struct inode {
 struct directory_entry {
     uint32_t inode;
     uint16_t size;
-    uint8_t low_name_length;
+    uint8_t name_length;
     uint8_t type_indicator;
     char name[0];
 } __attribute__((packed));

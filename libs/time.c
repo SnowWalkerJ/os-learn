@@ -6,30 +6,29 @@
 #include <libs/stdlib.h>
 #define days_in_year(year) (is_leap_year(year) ? 366 : 365)
 
-int days_in_month(int, int);
-int is_leap_year(int);
-int add_with_carry(int, int, int, int*);
-void _get_time_from_rtc(time_t*);
+static inline int days_in_month(int, int);
+static inline int is_leap_year(int);
+static int add_with_carry(int, int, int, int*);
+static void _get_time_from_rtc(time_t*);
 
-time_t time() {
-    time_t times[2];
+void time(time_t* tm) {
+    time_t tmp;
+    time_t* times[2] = {tm, &tmp};
     int i = 0;
     while (1) {
-        _get_time_from_rtc(times+i);
-        if (times[0].second == times[1].second &&
-            times[0].minute == times[1].minute &&
-            times[0].hour   == times[1].hour &&
-            times[0].day    == times[1].day) {
+        _get_time_from_rtc(times[i]);
+        if (times[0]->second == times[1]->second &&
+            times[0]->minute == times[1]->minute &&
+            times[0]->hour   == times[1]->hour &&
+            times[0]->day    == times[1]->day) {
                 break;
             }
         i = 1 - i;
     }
-    return times[0];
 }
 
-char* strftime(time_t tm, char* format) {
+void strftime(time_t* tm, char* format, char* result) {
     size_t len0 = strlen(format);
-    char* result = (char*)malloc(len0+20);
     int state = 0;
     int j = 0;
     for (int i = 0; i < (int)len0; i++) {
@@ -43,34 +42,34 @@ char* strftime(time_t tm, char* format) {
             int n;
             switch (format[i]) {
             case 'Y':
-                n = tm.year;
+                n = tm->year;
                 result[j++] = n / 1000 + '0';
                 result[j++] = (n / 100) % 10 + '0';
                 result[j++] = (n / 10) % 10 + '0';
                 result[j++] = n % 10 + '0';
                 break;
             case 'm':
-                n = tm.month;
+                n = tm->month;
                 result[j++] = (n / 10) % 10 + '0';
                 result[j++] = n % 10 + '0';
                 break;
             case 'd':
-                n = tm.day;
+                n = tm->day;
                 result[j++] = (n / 10) % 10 + '0';
                 result[j++] = n % 10 + '0';
                 break;
             case 'H':
-                n = tm.hour;
+                n = tm->hour;
                 result[j++] = (n / 10) % 10 + '0';
                 result[j++] = n % 10 + '0';
                 break;
             case 'M':
-                n = tm.minute;
+                n = tm->minute;
                 result[j++] = (n / 10) % 10 + '0';
                 result[j++] = n % 10 + '0';
                 break;
             case 'S':
-                n = tm.second;
+                n = tm->second;
                 result[j++] = (n / 10) % 10 + '0';
                 result[j++] = n % 10 + '0';
                 break;
@@ -83,7 +82,6 @@ char* strftime(time_t tm, char* format) {
         }
     }
     result[j] = 0;
-    return result;
 }
 
 time_t strptime(char* content, char* format) {
@@ -173,18 +171,18 @@ time_t change_time(time_t base, time_delta_t delta) {
     return base;
 }
 
-int to_timestamp(time_t tm) {
+int to_timestamp(time_t* tm) {
     time_t base = {1970, 1, 1, 0, 0, 0};
     int days = 0, year, month;
-    for (year = base.year; year < tm.year; year++) {
+    for (year = base.year; year < tm->year; year++) {
         days += days_in_year(year);
     }
     int leap = is_leap_year(year);
-    for (month = 1; month < tm.month; month++) {
+    for (month = 1; month < tm->month; month++) {
         days += days_in_month(leap, month);
     }
-    days += tm.day - 1;
-    int timestamp = ((days * 24 + tm.hour) * 60 + tm.minute) * 60 + tm.second;
+    days += tm->day - 1;
+    int timestamp = ((days * 24 + tm->hour) * 60 + tm->minute) * 60 + tm->second;
     return timestamp;
 }
 
@@ -194,7 +192,7 @@ time_t from_timestamp(int timestamp) {
     return change_time(base, delta);
 }
 
-int days_in_month(int leap, int month) {
+static inline int days_in_month(int leap, int month) {
     int days = 0;
     switch (month) {
     case 1:
@@ -237,17 +235,17 @@ int days_in_month(int leap, int month) {
     return days;
 }
 
-inline int is_leap_year(int year) {
+static inline int is_leap_year(int year) {
     return (year % 100 == 0) ? (year % 400 == 0) : (year % 4 == 0);
 }
 
-int add_with_carry(int val1, int val2, int base, int* carry) {
+static int add_with_carry(int val1, int val2, int base, int* carry) {
     int result = val1 + val2;
     *carry = result / base;
     return result % base;
 }
 
-void _get_time_from_rtc(time_t *tm) {
+static void _get_time_from_rtc(time_t *tm) {
     tm->second = BCD_TO_BIN(read_rtc_register(0));
     tm->minute = BCD_TO_BIN(read_rtc_register(2));
     tm->hour   = BCD_TO_BIN(read_rtc_register(4));

@@ -20,6 +20,6 @@ struct buffer_head {
 
 void init_block_buffers();
 struct buffer_head* getblk(int, int);
-void rlsblk(buffer_head*);
+void rlsblk(struct buffer_head*);
 
 #endif /* BUFFER_H */

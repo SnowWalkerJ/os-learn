@@ -1,6 +1,7 @@
+#ifdef INCOMPLETE
 #include <kernel/spinlock.h>
 #include <kernel/x86.h>
-#ifdef NOT_COMPLETE
+#include <kernel/console.h>
 
 /* private functions declared here */
 static int holding(struct spinlock*);
@@ -35,5 +36,4 @@ void release_spinlock(struct spinlock* lock) {
 static int holding(struct spinlock* lock) {
     return lock->locked && lock->cpu == cpu();
 }
-
 #endif

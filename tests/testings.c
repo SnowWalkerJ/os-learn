@@ -8,14 +8,14 @@ char* test_memcpy();
 void run_one_test(char* func(), char* name, int fatal) {
     char* result = func();
     if (result != NULL) {
-        printf("[%s]....\t", name);
+        printf("[%s]....", name);
         set_style(RED_ON_BLACK);
         kprint("failed");
         set_style(WHITE_ON_BLACK);
         printf(" (%s)\n", result);
         if (fatal) panic("");
     } else {
-        printf("[%s]....\t", name);
+        printf("[%s]....", name);
         set_style(GREEN_ON_BLACK);
         kprint("passed");
         set_style(WHITE_ON_BLACK);

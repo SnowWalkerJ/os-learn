@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <kernel/page.h>
 #include <kernel/crx.h>
 #include <kernel/console.h>
@@ -5,8 +6,8 @@
 #include <libs/assert.h>
 
 
-uint32_t *page_directory;
-int paging_disable_level;
+static uint32_t *page_directory;
+static int paging_disable_level;
 
 void init_page_directory();
 void set_init_4m_paging();
@@ -17,7 +18,7 @@ void init_page() {
     // assert(paging_disable_level == 1, "Paging enabled before initialization");
     paging_disable_level = 1;
     init_page_directory();
-	set_init_4m_paging();
+    set_init_4m_paging();
     enable_paging();
 }
 
@@ -53,7 +54,7 @@ void init_page_directory() {
 	for (int i = 0; i < 1024; i++) {
 		page_directory[i] = 0b10;
 	}
-    // make an identity map to make sure it;s accessible after paging is enabled
+    // make an identity map to make sure it's accessible after paging is enabled
 }
 
 void set_init_4m_paging() {

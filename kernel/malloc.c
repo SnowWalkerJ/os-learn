@@ -15,54 +15,51 @@ struct bucket_desc {
 };
 
 
-struct bucket_dir {
-    int size;
-    struct bucket_desc* head;
-};
 
-
-#define DIRS 9
-struct bucket_dir bucket_directory[DIRS];
+#define DIRS 8
+struct bucket_desc* bucket_directory[DIRS] = {NULL};
 
 struct bucket_desc* free_buckets = NULL;
 
 
 void init_malloc() {
-    bucket_directory[0].size = 32;
-    bucket_directory[0].head = (struct bucket_desc*)NULL;
-    bucket_directory[1].size = 64;
-    bucket_directory[1].head = (struct bucket_desc*)NULL;
-    bucket_directory[2].size = 128;
-    bucket_directory[2].head = (struct bucket_desc*)NULL;
-    bucket_directory[3].size = 256;
-    bucket_directory[3].head = (struct bucket_desc*)NULL;
-    bucket_directory[4].size = 512;
-    bucket_directory[4].head = (struct bucket_desc*)NULL;
-    bucket_directory[5].size = 1024;
-    bucket_directory[5].head = (struct bucket_desc*)NULL;
-    bucket_directory[6].size = 2048;
-    bucket_directory[6].head = (struct bucket_desc*)NULL;
-    bucket_directory[7].size = 9999;          // This is reserved for too small buckets
-    bucket_directory[7].head = (struct bucket_desc*)NULL;
-    bucket_directory[8].size = 0;             // End of directory
-    bucket_directory[8].head = (struct bucket_desc*)NULL;
+    // bucket_directory[0] = (struct bucket_desc*)NULL;
+    // bucket_directory[1] = (struct bucket_desc*)NULL;
+    // bucket_directory[2] = (struct bucket_desc*)NULL;
+    // bucket_directory[3] = (struct bucket_desc*)NULL;
+    // bucket_directory[4] = (struct bucket_desc*)NULL;
+    // bucket_directory[5] = (struct bucket_desc*)NULL;
+    // bucket_directory[6] = (struct bucket_desc*)NULL;
+    // bucket_directory[7] = (struct bucket_desc*)NULL;
 }
 
 
-#define DIR_NR(size) (size) <= 32 ? 0 : \
-                        (size) <= 64 ? 1 : \
-                            (size) <= 128 ? 2: \
-                                (size) <= 256 ? 3: \
-                                    (size) <= 512 ? 4 : \
-                                        (size) <= 1024 ? 5 : 6
+#define R_DIR_NR(size) ((size) <= 32 ? 1 : \
+                        (size) <= 64 ? 2 : \
+                            (size) <= 128 ? 3: \
+                                (size) <= 256 ? 4: \
+                                    (size) <= 512 ? 5 : \
+                                        (size) <= 1024 ? 6 : \
+                                            (size) <= 2048 ? 7 : 8)
 
 
-struct bucket_desc* find_bucket(int size) {
+#define W_DIR_NR(size) ((size) < 32 ? 0 : \
+                        (size) < 64 ? 1 : \
+                            (size) < 128 ? 2: \
+                                (size) < 256 ? 3: \
+                                    (size) < 512 ? 4 : \
+                                        (size) < 1024 ? 5 : \
+                                            (size) < 2048 ? 6 : 7)
+
+
+static struct bucket_desc* find_bucket(int size) {
     if (size > 4096) return NULL;
     struct bucket_desc* bucket;
-    int dir_id = DIR_NR(size);
-    for(; bucket_directory[dir_id].size; dir_id++) {
-        bucket = bucket_directory[dir_id].head;
+    int dir_id = R_DIR_NR(size);
+    if (dir_id >= DIRS)
+        return NULL;
+    for(; dir_id < DIRS; dir_id++) {
+        bucket = bucket_directory[dir_id];
         if (bucket) {
             break;
         }
@@ -71,7 +68,7 @@ struct bucket_desc* find_bucket(int size) {
 }
 
 
-void expand_free_buckets() {
+static void expand_free_buckets() {
     if (free_buckets) return;
     void* page = kalloc_page();
     for (int i = 0; i < (int)(PAGE_SIZE / sizeof(struct bucket_desc)); i++) {
@@ -82,17 +79,17 @@ void expand_free_buckets() {
         bucket->refcnt = 0;
         bucket->next = bucket+1;
     }
-    ((struct bucket_desc*)page + PAGE_SIZE / sizeof(struct bucket_desc))->next = free_buckets;
+    ((struct bucket_desc*)page + PAGE_SIZE / sizeof(struct bucket_desc) - 1)->next = free_buckets;
     free_buckets = (struct bucket_desc*)page;
 }
 
 
-void remove_from_directory(struct bucket_desc* bucket) {
+static void remove_from_directory(struct bucket_desc* bucket) {
     if (!bucket) return;
-    int dir_id = DIR_NR(bucket->size);
-    struct bucket_desc* head = bucket_directory[dir_id].head;
+    int dir_id = R_DIR_NR(bucket->size);
+    struct bucket_desc* head = bucket_directory[dir_id];
     if (head == bucket) {
-        bucket_directory[dir_id].head = bucket->next;
+        bucket_directory[dir_id] = bucket->next;
     } else {
         for (; head->next; head = head->next) {
             if (head->next == bucket)
@@ -102,15 +99,15 @@ void remove_from_directory(struct bucket_desc* bucket) {
 }
 
 
-void insert_into_directory(struct bucket_desc* bucket) {
-    int dir_id = DIR_NR(bucket->size) - 1;
+static void insert_into_directory(struct bucket_desc* bucket) {
+    int dir_id = W_DIR_NR(bucket->size);
     if (dir_id < 0) dir_id = DIRS - 2;
-    bucket->next = bucket_directory[dir_id].head;
-    bucket_directory[dir_id].head = bucket;
+    bucket->next = bucket_directory[dir_id];
+    bucket_directory[dir_id] = bucket;
 }
 
 
-struct bucket_desc* create_bucket() {
+static struct bucket_desc* create_bucket() {
     if (!free_buckets)
         expand_free_buckets();
     struct bucket_desc* bucket = free_buckets;
@@ -123,7 +120,7 @@ struct bucket_desc* create_bucket() {
 }
 
 
-void release_bucket(struct bucket_desc* bucket) {
+static void release_bucket(struct bucket_desc* bucket) {
     kfree_page(bucket->page);
     bucket->page = bucket->free_ptr = NULL;
     bucket->refcnt = 0;
@@ -152,8 +149,8 @@ void* malloc(size_t size) {
 
 void free(void* ptr) {
     int success = 0;
-    for (struct bucket_dir* dir = bucket_directory; dir->size; dir++) {
-        for (struct bucket_desc* desc = dir->head; desc; desc = desc->next) {
+    for (int i = 0; i < DIRS; i++) {
+        for (struct bucket_desc* desc = bucket_directory[i]; desc; desc = desc->next) {
             if (desc->page <= ptr && desc->free_ptr >= ptr) {
                 desc->refcnt--;
                 if (!desc->refcnt) {

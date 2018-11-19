@@ -1,24 +1,32 @@
 #include <libs/stdlib.h>
 #include <kernel/kmemory.h>
 #include <kernel/console.h>
+#define MAX_MEMORY_SIZE 0xFFFFFFFF
+#define TABLE_SIZE 128
 
-uint32_t search_table(uint8_t*);
-void set_occupied(void*, uint32_t);
-void set_free(void*, uint32_t);
-uint32_t get_value(void*, uint32_t);
+typedef uint8_t page_bitmap[TABLE_SIZE];
+page_bitmap l1_table = {0};
+page_bitmap l2_table[TABLE_SIZE * 8] = {{0}};
+
+static int search_table(page_bitmap);
+static void set_occupied(page_bitmap, uint16_t);
+static void set_free(page_bitmap, uint16_t);
+static int get_value(page_bitmap);
 
 void init_memory_tables() {
-    memsetb(L1_TABLE, 0, TABLE_SIZE);
-    memsetb(L2_TABLE, 0, TABLE_SIZE * TABLE_SIZE * 64);
-    set_occupied(L1_TABLE, 0); // reserve the first 4M for kernel
+    // for (int i = 0; i < TABLE_SIZE * 8; i++)
+    //     memsetw(l2_table[i], 0, TABLE_SIZE / 2);
+    set_occupied(l1_table, 0); // reserve the first 4M for kernel
 }
 
 void* kalloc_page() {
-    uint32_t id1 = search_table((uint8_t*)L1_TABLE);
-    uint32_t id2 = search_table((uint8_t*)(L2_TABLE+id1*TABLE_SIZE));
-    uint32_t addr = (id1 * TABLE_SIZE + id2) * PAGE_SIZE;
-    set_occupied(L1_TABLE, id1);
-    set_occupied(L2_TABLE+id1*TABLE_SIZE, id2);
+    int id1 = search_table(l1_table);
+    if (id1 < 0) return NULL;
+    int id2 = search_table(l2_table[id1]);
+    if (id2 < 0) panic("inconsistent page bitmap");
+    uint32_t addr = ((uint32_t)id1 * TABLE_SIZE * 8 + (uint32_t)id2) * PAGE_SIZE;
+    set_occupied(l1_table, id1);
+    set_occupied(l2_table[id1], id2);
     return (void*)addr;
 }
 
@@ -26,13 +34,13 @@ void kfree_page(void* addr) {
     uint32_t id1, id2;
     id1 = (uint32_t)addr >> 22;
     id2 = ((uint32_t)addr >> 12) & 0x03FF;
-    set_free(L2_TABLE, id2);
-    if (get_value(L2_TABLE, id2) == 0) {
-        set_free(L1_TABLE, id1);
+    set_free(l2_table[id1], id2);
+    if (get_value(l2_table[id1]) == 0) {
+        set_free(l1_table, id1);
     }
 }
 
-uint32_t search_table(uint8_t* table) {
+static int search_table(page_bitmap table) {
     uint32_t max_id = TABLE_SIZE;
     for (uint32_t bid = 0; bid < max_id; bid++) {
         uint8_t block = table[bid];
@@ -46,21 +54,24 @@ uint32_t search_table(uint8_t* table) {
             }
         }
     }
-    return 0xffffffff;
+    return -1;
 }
 
-uint32_t get_value(void* table, uint32_t id) {
-    uint32_t high = id / (8 * sizeof(uint32_t));
-    return ((uint32_t*)table)[high];
+static int get_value(page_bitmap table) {
+    int total = 0;
+    for(int i = 0; i < TABLE_SIZE; i++) {
+        total += table[i];
+    }
+    return total;
 }
 
-void set_occupied(void* table, uint32_t id) {
+static void set_occupied(page_bitmap table, uint16_t id) {
     uint32_t high = id / (8 * sizeof(uint32_t));
     uint32_t low = 1 << (id % (8 * sizeof(uint32_t)));
     ((uint32_t*)table)[high] |= low;
 }
 
-void set_free(void* table, uint32_t id) {
+static void set_free(page_bitmap table, uint16_t id) {
     uint32_t high = id / (8 * sizeof(uint32_t));
     uint32_t low = 1 << (id % (8 * sizeof(uint32_t)));
     ((uint32_t*)table)[high] ^= low;

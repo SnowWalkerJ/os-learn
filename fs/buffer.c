@@ -16,6 +16,12 @@ struct buffer_head* hashtable[NR_HASHTABLE];
 static struct task_struct * buffer_wait = NULL;
 
 
+static inline void wait_on_buffer(struct buffer_head*);
+static inline void remove_from_queues(struct buffer_head* bh);
+static inline void insert_into_queues(struct buffer_head* bh);
+static inline void sync_dev(int);
+
+
 struct buffer_head* find_block_in_hashtable(int dev, int block) {
     struct buffer_head* bh;
     for (bh = hash(dev, block); bh != NULL; bh = bh->next) {
@@ -89,6 +95,7 @@ struct buffer_head* getblk (int dev, int block) {
     bh->dev = dev;
     bh->block = block;
     insert_into_queues(bh);
+    return bh;
 }
 
 
@@ -102,7 +109,7 @@ void rlsblk (struct buffer_head* bh) {
 
 
 void init_block_buffers () {
-    struct buffer_head* last_bh = NULL, bh;
+    struct buffer_head *last_bh = NULL, *bh;
     free_buffers = NULL;
     for (int i = 0; i < NR_BUFFER; i++) {
         bh = malloc(sizeof(struct buffer_head));
@@ -118,7 +125,7 @@ void init_block_buffers () {
         bh->next = NULL;
         last_bh->next_free = bh;
         bh->prev_free = last_bh;
-        bh->next_free = free_blocks;
+        bh->next_free = free_buffers;
         bh->uptodate = 0;
         last_bh = bh;
     }
@@ -158,7 +165,7 @@ static inline void insert_into_queues(struct buffer_head* bh) {
     }
 
     bh->next = bh->prev = NULL;
-    if (bh->dev == 0) return;
+    if (bh->dev < 0) return;
     bh->next = hash(bh->dev, bh->block);
     hash(bh->dev, bh->block) = bh;
     if (bh->next != NULL)
@@ -166,16 +173,30 @@ static inline void insert_into_queues(struct buffer_head* bh) {
 }
 
 
-struct buffer_head* bread(int dev, int block) {
+struct buffer_head* bread(int dev, int block, int size) {
     struct buffer_head* bh;
     if (!(bh = getblk(dev, block))) 
         panic("bread: return NULL from getblk");
     if (bh->uptodate)
         return bh;
-    ll_rw_block(READ, bh);
+    read_block(bh, size);
     wait_on_buffer(bh);
     if (bh->uptodate)
         return bh;
     rlsblk(bh);
     return NULL;
+}
+
+
+static inline void wait_on_buffer(struct buffer_head* bh) {
+    while (bh->locked) {
+        asm volatile("nop;nop;nop;nop;"
+                     "nop;nop;nop;nop;"
+                     "nop;nop;nop;nop;");
+    }
+}
+
+
+static inline void sync_dev(int dev) {
+    (void)(dev);
 }

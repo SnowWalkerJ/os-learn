@@ -1,6 +1,6 @@
-C_SOURCES = $(wildcard drivers/*.c kernel/*.c libs/*.c cpu/*.c tests/*.c)
+C_SOURCES = $(wildcard drivers/*.c kernel/*.c libs/*.c cpu/*.c tests/*.c fs/*.c)
 S_SOURCES = $(wildcard cpu/*.asm kernel/*.asm)
-HEADERS = $(wildcard drivers/*.h kernel/*.h libs/*.h cpu/*.h tests/*.h)
+HEADERS = include/$(wildcard drivers/*.h kernel/*.h libs/*.h cpu/*.h tests/*.h fs/*.h)
 TARGET_DIR = build
 DIST_DIR = dist
 OBJ = $(addprefix $(TARGET_DIR)/, $(C_SOURCES:.c=.o) $(S_SOURCES:.asm=.o))
@@ -19,12 +19,12 @@ makedir:
 run: $(DIST_DIR)/os-image
 	qemu-system-i386 -curses -fda $<
 
-debug: $(DIST_DIR)/os-image $(TARGET_DIR)/kernel.elf
+debug: build $(TARGET_DIR)/kernel.elf
 	# qemu-system-i386 -s -S -curses -fda os-image -d guest_errors,int & $(GDB) -ex "target remote localhost:1234" -ex "symbol-file kernel.elf"
 	qemu-system-i386 -s -S -curses -fda $(DIST_DIR)/os-image -d guest_errors,int
 
 clean:
-	rm -r build/*
+	rm -r build/* dist/*
 
 tools: makedir $(DIST_DIR)/tools/mkfs
 

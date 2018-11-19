@@ -1,4 +1,5 @@
 #include <libs/stdlib.h>
+#include <libs/string.h>
 #include <kernel/memory.h>
 
 
@@ -41,4 +42,15 @@ int strcmp(char* str1, char*str2) {
 	for(; !(*str1 == 0 || *str2 == 0 || *str1 != *str2); str1++, str2++)
 		;
 	return (*str1 - *str2);
+}
+
+
+int strncmp(char* str1, char* str2, size_t n) {
+	int result;
+	for (size_t i = 0; i < n; i++) {
+		result = (int)(str1[i] - str2[i]);
+		if (result == 0) continue;
+		return result;
+	}
+	return result;
 }

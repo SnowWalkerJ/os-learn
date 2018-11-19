@@ -24,3 +24,13 @@ uint16_t portWordIn(uint16_t port) {
 void portWordOut(uint16_t port, uint16_t data) {
 	__asm__ __volatile__("out %%ax, %%dx" : : "a" (data), "d" (port));
 }
+
+
+void insw(uint16_t port, uint16_t* data, size_t count) {
+	asm volatile("rep insw"
+				 : : 
+				 "D" (data), 
+				 "d" (port),
+				 "c" (count)
+				);
+}

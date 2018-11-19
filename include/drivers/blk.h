@@ -2,6 +2,6 @@
 #define BLK_H
 #include <fs/buffer.h>
 
-void ll_rw_block(int, struct buffer_head*);
+void read_block(struct buffer_head*, int);
 
 #endif /* BLK_H */
