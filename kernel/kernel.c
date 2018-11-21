@@ -12,6 +12,7 @@
 #include <kernel/kmemory.h>
 #include <kernel/interrupt_handlers.h>
 #include <libs/assert.h>
+#include <fs/buffer.h>
 extern void isr_install();
 void init_time();
 
@@ -31,6 +32,8 @@ void init(){
     kprint("Interrupt handlers registered\n");
     init_hdd();
     kprint("Hard drives initialized\n");
+    init_block_buffers();
+    kprint("Buffers initialized\n");
     run_tests();
     // init_time();
 }
@@ -48,14 +51,15 @@ void shell () {
     kprint("\nLearnOS> ");
 }
 
+
+#include <fs/ext2.h>
+
 void main () {
     init();
 
-    char* data = (char*)malloc(SECTOR_SIZE);
-    pio_read_lba(0, 0, data);
-    data[5] = 0;
-    printf("%s", data);
-    free(data);
+    struct superblock* sb = get_super(0);
+    printf("Total number of blocks: %d\n", (int)sb->blocks);
+    printf("Total number of inodes: %d\n", (int)sb->inodes);
 
     shell();
 }

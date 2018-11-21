@@ -26,8 +26,11 @@ void* kalloc_page() {
     int id2 = search_table(l2_table[id1]);
     if (id2 < 0) panic("inconsistent page bitmap");
     uint32_t addr = ((uint32_t)id1 * TABLE_SIZE * 8 + (uint32_t)id2) * PAGE_SIZE;
-    set_occupied(l1_table, id1);
+
+    if (get_value(l2_table[id1]) == 0xFF)
+        set_occupied(l1_table, id1);
     set_occupied(l2_table[id1], id2);
+    
     return (void*)addr;
 }
 
@@ -46,7 +49,7 @@ static int search_table(page_bitmap table) {
     for (uint32_t bid = 0; bid < max_id; bid++) {
         uint8_t block = table[bid];
         if (block != 0xff) {
-            for (int cid = 0; cid <= 0xff; cid++) {
+            for (int cid = 0; cid <= 8; cid++) {
                 if ((block & 1) == 0) {
                     return bid * 8 + cid;
                 } else {

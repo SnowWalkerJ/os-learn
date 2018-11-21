@@ -123,6 +123,7 @@ void init_block_buffers () {
         bh->dirty = 0;
         bh->locked = 0;
         bh->next = NULL;
+        bh->prev = NULL;
         last_bh->next_free = bh;
         bh->prev_free = last_bh;
         bh->next_free = free_buffers;
@@ -180,7 +181,6 @@ struct buffer_head* bread(int dev, int block) {
     if (bh->uptodate)
         return bh;
     uint32_t sector = bh->block * BUFFER_SIZE / SECTOR_SIZE;
-    bh->locked = 1;
     for (uint32_t i = 0; i < BUFFER_SIZE / SECTOR_SIZE; i++){
         pio_read_lba(bh->dev, sector+i, bh->data + i * SECTOR_SIZE);
     }

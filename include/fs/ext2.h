@@ -187,4 +187,7 @@ struct directory_entry {
     char name[0];
 } __attribute__((packed));
 
+struct superblock* get_super(int dev);
+void init_block_buffers();
+
 #endif /* EXT2_H */
