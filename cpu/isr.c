@@ -12,9 +12,9 @@
 #define PIC2_DATA (PIC2_CMD+1)
 #define PIC_EOI 0x20
 
-isr_t interrupt_handlers[256];
+static isr_t interrupt_handlers[256];
 
-char* exceptions_messages[] = {
+const char* exceptions_messages[] = {
     "Division By Zero",
     "Debug",
     "Non Maskable Interrupt",

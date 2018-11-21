@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <drivers/screen.h>
+#include <drivers/ata.h>
 #include <libs/string.h>
 #include <libs/time.h>
 #include <libs/stdio.h>
@@ -10,24 +11,28 @@
 #include <kernel/memory.h>
 #include <kernel/kmemory.h>
 #include <kernel/interrupt_handlers.h>
-#define UNUSED(x) (void)(x)
+#include <libs/assert.h>
 extern void isr_install();
 void init_time();
 
 void init(){
-    init_gdt();
+    set_style(WHITE_ON_BLACK);
     clearScreen();
 	kprintAt("Kernel entered.\n", 1, 0);
+    init_gdt();
+    kprint("Kernel take control of gdt\n");
     init_memory_tables();
+    init_page();
     init_malloc();
     kprint("Memory initialized\n");
-	isr_install();
+    isr_install();
     kprint("ISR installed\n");
     register_interrupt_handlers();
     kprint("Interrupt handlers registered\n");
-	init_page();
+    init_hdd();
+    kprint("Hard drives initialized\n");
     run_tests();
-    init_time();
+    // init_time();
 }
 
 void init_time() {
@@ -45,5 +50,12 @@ void shell () {
 
 void main () {
     init();
+
+    char* data = (char*)malloc(SECTOR_SIZE);
+    pio_read_lba(0, 0, data);
+    data[5] = 0;
+    printf("%s", data);
+    free(data);
+
     shell();
 }

@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <kernel/kmemory.h>
 #include <kernel/console.h>
+#include <kernel/page.h>
 
 
 // TODO: page mapping
@@ -23,14 +24,14 @@ struct bucket_desc* free_buckets = NULL;
 
 
 void init_malloc() {
-    // bucket_directory[0] = (struct bucket_desc*)NULL;
-    // bucket_directory[1] = (struct bucket_desc*)NULL;
-    // bucket_directory[2] = (struct bucket_desc*)NULL;
-    // bucket_directory[3] = (struct bucket_desc*)NULL;
-    // bucket_directory[4] = (struct bucket_desc*)NULL;
-    // bucket_directory[5] = (struct bucket_desc*)NULL;
-    // bucket_directory[6] = (struct bucket_desc*)NULL;
-    // bucket_directory[7] = (struct bucket_desc*)NULL;
+    bucket_directory[0] = (struct bucket_desc*)NULL;
+    bucket_directory[1] = (struct bucket_desc*)NULL;
+    bucket_directory[2] = (struct bucket_desc*)NULL;
+    bucket_directory[3] = (struct bucket_desc*)NULL;
+    bucket_directory[4] = (struct bucket_desc*)NULL;
+    bucket_directory[5] = (struct bucket_desc*)NULL;
+    bucket_directory[6] = (struct bucket_desc*)NULL;
+    bucket_directory[7] = (struct bucket_desc*)NULL;
 }
 
 
@@ -70,23 +71,24 @@ static struct bucket_desc* find_bucket(int size) {
 
 static void expand_free_buckets() {
     if (free_buckets) return;
-    void* page = kalloc_page();
+    struct bucket_desc* page = (struct bucket_desc*)kalloc_page();
+    bind_page(page, page);             // TODO: when multiprocess happens, this should change
     for (int i = 0; i < (int)(PAGE_SIZE / sizeof(struct bucket_desc)); i++) {
-        struct bucket_desc* bucket = (struct bucket_desc*)page + i;
+        struct bucket_desc* bucket = page + i;
         bucket->free_ptr = NULL;
         bucket->size = 0;
         bucket->page = NULL;
         bucket->refcnt = 0;
         bucket->next = bucket+1;
     }
-    ((struct bucket_desc*)page + PAGE_SIZE / sizeof(struct bucket_desc) - 1)->next = free_buckets;
-    free_buckets = (struct bucket_desc*)page;
+    (page + PAGE_SIZE / sizeof(struct bucket_desc) - 1)->next = free_buckets;
+    free_buckets = page;
 }
 
 
 static void remove_from_directory(struct bucket_desc* bucket) {
     if (!bucket) return;
-    int dir_id = R_DIR_NR(bucket->size);
+    int dir_id = W_DIR_NR(bucket->size);
     struct bucket_desc* head = bucket_directory[dir_id];
     if (head == bucket) {
         bucket_directory[dir_id] = bucket->next;
@@ -101,7 +103,6 @@ static void remove_from_directory(struct bucket_desc* bucket) {
 
 static void insert_into_directory(struct bucket_desc* bucket) {
     int dir_id = W_DIR_NR(bucket->size);
-    if (dir_id < 0) dir_id = DIRS - 2;
     bucket->next = bucket_directory[dir_id];
     bucket_directory[dir_id] = bucket;
 }
@@ -113,6 +114,7 @@ static struct bucket_desc* create_bucket() {
     struct bucket_desc* bucket = free_buckets;
     free_buckets = free_buckets->next;
     bucket->page = bucket->free_ptr = kalloc_page();
+    bind_page(bucket->page, bucket->page);
     bucket->size = PAGE_SIZE;
     bucket->next = NULL;
     bucket->refcnt = 0;
@@ -121,6 +123,7 @@ static struct bucket_desc* create_bucket() {
 
 
 static void release_bucket(struct bucket_desc* bucket) {
+    unbind_page(bucket->page);
     kfree_page(bucket->page);
     bucket->page = bucket->free_ptr = NULL;
     bucket->refcnt = 0;
@@ -154,6 +157,7 @@ void free(void* ptr) {
             if (desc->page <= ptr && desc->free_ptr >= ptr) {
                 desc->refcnt--;
                 if (!desc->refcnt) {
+                    remove_from_directory(desc);
                     release_bucket(desc);
                 }
                 success = 1;

@@ -7,6 +7,8 @@
 #include <fs/buffer.h>
 #include <kernel/port.h>
 
+#define SECTOR_SIZE 512
+
 
 enum hd_device {
     HDA = 0,
@@ -38,6 +40,6 @@ struct status_register identify(enum hd_device);
 
 struct status_register poll_status(enum bus_number);
 
-int read_sector(struct buffer_head*);
+int pio_read_lba(int, int, void*);
 
 #endif /* ATA_H */

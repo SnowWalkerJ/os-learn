@@ -8,20 +8,20 @@
 
 // Declaration of private functions
 
-unsigned int getCursorOffset();
-void setCursorOffset(unsigned int);
-int putCharAt(char, int, int, char);
-unsigned int getOffset(int, int);
-int getOffsetRow(unsigned int);
-int getOffsetCol(unsigned int);
-void setEmpty();
-void handleScroll();
+static unsigned int getCursorOffset();
+static void setCursorOffset(unsigned int);
+static int putCharAt(char, int, int, char);
+static inline unsigned int getOffset(int, int);
+static inline int getOffsetRow(unsigned int);
+static inline int getOffsetCol(unsigned int);
+static void setEmpty();
+static void handleScroll();
 
-uint8_t current_style = WHITE_ON_BLACK;
+static uint8_t current_style = WHITE_ON_BLACK;
 
 // Public API functions
 
-void kprintAt(char* message, int row, int col) {
+void kprintAt(const char* message, int row, int col) {
 	unsigned int offset;
 	if (row >= 0 && col >= 0) {
 		offset = getOffset(row, col);
@@ -38,7 +38,7 @@ void kprintAt(char* message, int row, int col) {
 	}
 }
 
-void kprint(char* message) {
+void kprint(const char* message) {
 	kprintAt(message, -1, -1);
 }
 
@@ -63,11 +63,11 @@ void set_style(uint8_t style) {
 
 // Private functions
 
-unsigned int getOffset(int row, int col) {
+static inline unsigned int getOffset(int row, int col) {
 	return (row * MAX_COLS + col) * 2;
 }
 
-unsigned int getCursorOffset() {
+static unsigned int getCursorOffset() {
 	portByteOut(REG_SCREEN_CTRL, 14);
 	unsigned int offset = (unsigned int)(portByteIn(REG_SCREEN_DATA) << 8);
 	portByteOut(REG_SCREEN_CTRL, 15);
@@ -75,23 +75,23 @@ unsigned int getCursorOffset() {
 	return offset * 2;
 }
 
-void setCursorOffset(unsigned int offset) {
+static void setCursorOffset(unsigned int offset) {
 	offset /= 2;
 	portByteOut(REG_SCREEN_CTRL, 14);
-	portByteOut(REG_SCREEN_DATA, (unsigned char)(offset >> 8));
+	portByteOut(REG_SCREEN_DATA, (unsigned char)((offset >> 8) & 0xff));
 	portByteOut(REG_SCREEN_CTRL, 15);
 	portByteOut(REG_SCREEN_DATA, (unsigned char)(offset & 0xff));
 }
 
-int getOffsetRow(unsigned int offset) {
+static inline int getOffsetRow(unsigned int offset) {
 	return offset / 2 / MAX_COLS;
 }
 
-int getOffsetCol(unsigned int offset) {
+static inline int getOffsetCol(unsigned int offset) {
 	return (offset / 2) % MAX_COLS;
 }
 
-int putCharAt(char c, int row, int col, char style) {
+static int putCharAt(char c, int row, int col, char style) {
 	unsigned char* address = (unsigned char*)VIDEO_ADDRESS;
 	if (!style) style = WHITE_ON_BLACK;
 
@@ -125,15 +125,15 @@ int putCharAt(char c, int row, int col, char style) {
 	return offset;
 }
 
-void setEmpty(unsigned int begin, size_t length) {
+static void setEmpty(unsigned int begin, size_t length) {
 	unsigned char* addr = (unsigned char*)VIDEO_ADDRESS;
 	char tmp[2] = {' ', WHITE_ON_BLACK};
 	memsetw(addr+begin, *(uint16_t*)tmp, length);
 }
 
-void handleScroll(){
+static void handleScroll(){
 	unsigned int offset = 2 * MAX_COLS;
-	memcpy((unsigned char*)(VIDEO_ADDRESS+offset), (unsigned char*)VIDEO_ADDRESS, MAX_COLS*(MAX_ROWS-1)*2);
+	memcpy((unsigned char*)VIDEO_ADDRESS, (unsigned char*)(VIDEO_ADDRESS+offset), MAX_COLS*(MAX_ROWS-1)*2);
 	offset = MAX_COLS*(MAX_ROWS-1)*2;
 	setEmpty(offset, MAX_COLS);
 	setCursorOffset(offset);

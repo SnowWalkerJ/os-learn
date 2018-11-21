@@ -1,7 +1,13 @@
 /*
     Reference: https://wiki.osdev.org/ATA_PIO_Mode
+
+    Currently I intend to to support only one drive,
+    but some interfaces are reserved for further extension.
 */
 #include <drivers/ata.h>
+#include <fs/buffer.h>
+#include <libs/stdio.h>
+#include <kernel/memory.h>
 
 
 
@@ -80,10 +86,21 @@ struct status_register poll_status(enum bus_number);
 
 
 void init_hdd() {
+    const char* disk_names[] = {
+        "HDA", "HDB", "HDC", "HDD"
+    };
+    char* data = (char*)malloc(512);
     for (int i = 0; i < 4; i++) {
         struct status_register status = identify(i);
-        exists[i] = *(uint8_t*)&status != 0;
+        if ((exists[i] = *(uint8_t*)&status && !status.err)) {
+            printf("Found drive %s\n", disk_names[i]);
+            if (status.drq) {
+                insw(data_io(BUS_NUMBER(i)), (uint16_t*)data, 256);
+                delay_400ns(BUS_NUMBER(i));
+            }
+        }
     }
+    free(data);
 
     select_drive(PRIMARY_BUS, MASTER_DRIVE);
     select_drive(SECONDARY_BUS, MASTER_DRIVE);
@@ -91,7 +108,7 @@ void init_hdd() {
 
 
 void delay_400ns(enum bus_number bus) {
-    uint16_t port = bus == PRIMARY_BUS ? PRIMARY_IO_BASE : SECONDARY_IO_BASE;
+    uint16_t port = IO_BASE(bus);
     portByteIn(port);
     portByteIn(port);
     portByteIn(port);
@@ -111,11 +128,12 @@ void select_drive(enum bus_number bus, enum drive_number drive) {
 struct status_register identify(enum hd_device dev) {
     uint8_t bus = BUS_NUMBER(dev);
     uint8_t drive = DRIVER_NUMER(dev);
+    portByteOut(drive_head_io(bus), drive == MASTER_DRIVE ? 0xA0 : 0xB0);
     portByteOut(sector_count_io(bus), 0);
     portByteOut(lba_hi_io(bus), 0);
     portByteOut(lba_mi_io(bus), 0);
     portByteOut(lba_lo_io(bus), 0);
-    select_drive(bus, drive);
+    // select_drive(bus, drive);
     portByteOut(command_io(bus), IDENTIFY);
     return poll_status(bus);
 }
@@ -123,37 +141,39 @@ struct status_register identify(enum hd_device dev) {
 
 struct status_register poll_status(enum bus_number bus) {
     uint8_t status_byte;
-    struct status_register* status;
+    struct status_register* status = (struct status_register*)&status_byte;
     do {
-        status_byte = portByteIn(status_io(bus));
-        status = (struct status_register*)&status_byte;
-    } while (!status_byte && status->bsy);
+        *&status_byte = portByteIn(status_io(bus));
+    } while (status->bsy);
+    if (status_byte && (portByteIn(lba_hi_io(bus) != 0 || portByteIn(lba_mi_io(bus) != 0)))) {
+        // It's not ATA device
+        *&status_byte = 0;
+    }
     return *status;
 }
 
 
-int read_sector(struct buffer_head* bh) {
-    uint8_t drive_number = DRIVER_NUMER(bh->dev);
-    uint8_t bus_number      = BUS_NUMBER(bh->dev);
-    portByteOut(drive_head_io(bus_number), (uint8_t)((drive_number << 4) | 0xE0 | ((bh->block >> 24) & 0x0F)));
+int pio_read_lba(int dev, int block, void* data) {
+    uint8_t drive_number = DRIVER_NUMER(dev);
+    uint8_t bus_number   = BUS_NUMBER(dev);
+    portByteOut(drive_head_io(bus_number), (uint8_t)((drive_number << 4) | 0xE0 | ((block >> 24) & 0x0F)));
+    portByteOut(features_io(bus_number), 0);
     portByteOut(sector_count_io(bus_number), 1);
-    portByteOut(lba_lo_io(bus_number), (uint8_t)(bh->block & 0xFF));
-    portByteOut(lba_mi_io(bus_number), (uint8_t)((bh->block >> 8) & 0xFF));
-    portByteOut(lba_hi_io(bus_number), (uint8_t)((bh->block >> 16) & 0xFF));
+    portByteOut(lba_lo_io(bus_number), (uint8_t)(block & 0xFF));
+    portByteOut(lba_mi_io(bus_number), (uint8_t)((block >> 8) & 0xFF));
+    portByteOut(lba_hi_io(bus_number), (uint8_t)((block >> 16) & 0xFF));
     portByteOut(command_io(bus_number), READ_SECTORS);
-    int i;
-    for (i = 0; i < 8; i++) {                           // 8 * 512 = 4K
-        struct status_register status;
-        do {
-            status = poll_status(bus_number);
-        } while (status.err || status.drq);
-        if (status.drq) {
-            insw(data_io(drive_number), (uint16_t*)bh->data, 256);
-            delay_400ns(bus_number);
-        } else if (status.err) {
-            i--;
-            break;
-        }
+    int i = 0;
+    unsigned int count_of_words = SECTOR_SIZE / sizeof(uint16_t);
+    struct status_register status;
+    do {
+        status = poll_status(bus_number);
+    } while (!(status.err || status.drq));
+    if (status.drq) {
+        insw(data_io(drive_number), (uint16_t*)data, count_of_words);
+        delay_400ns(bus_number);
+    } else if (status.err) {
+        i--;
     }
-    return i + 1;
+    return i;
 }

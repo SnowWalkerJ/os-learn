@@ -5,8 +5,8 @@
 #define TABLE_SIZE 128
 
 typedef uint8_t page_bitmap[TABLE_SIZE];
-page_bitmap l1_table = {0};
-page_bitmap l2_table[TABLE_SIZE * 8] = {{0}};
+static page_bitmap l1_table = {0};
+static page_bitmap l2_table[TABLE_SIZE * 8] = {{0}};
 
 static int search_table(page_bitmap);
 static void set_occupied(page_bitmap, uint16_t);
@@ -14,6 +14,7 @@ static void set_free(page_bitmap, uint16_t);
 static int get_value(page_bitmap);
 
 void init_memory_tables() {
+    // memsetw(l1_table, 0, TABLE_SIZE);
     // for (int i = 0; i < TABLE_SIZE * 8; i++)
     //     memsetw(l2_table[i], 0, TABLE_SIZE / 2);
     set_occupied(l1_table, 0); // reserve the first 4M for kernel

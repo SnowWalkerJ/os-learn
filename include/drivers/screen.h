@@ -32,9 +32,9 @@
 
 #include<stdint.h>
 
-void kprint(char*);
+void kprint(const char*);
 void kprint_hex(uint32_t);
-void kprintAt(char*, int, int);
+void kprintAt(const char*, int, int);
 void kput_char(char);
 void backspace();
 void clearScreen();

@@ -2,7 +2,7 @@
 #include <fs/buffer.h>
 #include <kernel/memory.h>
 #include <kernel/sched.h>
-#include <drivers/blk.h>
+#include <drivers/ata.h>
 
 
 #define NR_BUFFER 128
@@ -11,8 +11,8 @@
 #define hash(dev, block) hashtable[_hashfn(dev, block)]
 
 
-struct buffer_head* free_buffers;
-struct buffer_head* hashtable[NR_HASHTABLE];
+static struct buffer_head* free_buffers;
+static struct buffer_head* hashtable[NR_HASHTABLE];
 static struct task_struct * buffer_wait = NULL;
 
 
@@ -22,7 +22,7 @@ static inline void insert_into_queues(struct buffer_head* bh);
 static inline void sync_dev(int);
 
 
-struct buffer_head* find_block_in_hashtable(int dev, int block) {
+static struct buffer_head* find_block_in_hashtable(int dev, int block) {
     struct buffer_head* bh;
     for (bh = hash(dev, block); bh != NULL; bh = bh->next) {
         if (bh->dev == dev && bh->block == block) {
@@ -33,7 +33,7 @@ struct buffer_head* find_block_in_hashtable(int dev, int block) {
 }
 
 
-struct buffer_head* get_hash_table(int dev, int block) {
+static struct buffer_head* get_hash_table(int dev, int block) {
     struct buffer_head* bh;
     while (1) {
         if (!(bh = find_block_in_hashtable(dev, block))) {
@@ -173,14 +173,19 @@ static inline void insert_into_queues(struct buffer_head* bh) {
 }
 
 
-struct buffer_head* bread(int dev, int block, int size) {
+struct buffer_head* bread(int dev, int block) {
     struct buffer_head* bh;
     if (!(bh = getblk(dev, block))) 
         panic("bread: return NULL from getblk");
     if (bh->uptodate)
         return bh;
-    read_block(bh, size);
+    uint32_t sector = bh->block * BUFFER_SIZE / SECTOR_SIZE;
+    bh->locked = 1;
+    for (uint32_t i = 0; i < BUFFER_SIZE / SECTOR_SIZE; i++){
+        pio_read_lba(bh->dev, sector+i, bh->data + i * SECTOR_SIZE);
+    }
     wait_on_buffer(bh);
+    bh->uptodate = 1;
     if (bh->uptodate)
         return bh;
     rlsblk(bh);

@@ -1,10 +1,11 @@
-#include <string.h>
+#include <libs/string.h>
 #include <fs/bitmap.h>
+#include <libs/stdlib.h>
 
 
 void empty_bitmap(struct bitmap* bm) {
     /* Set all bits in the area to zero */
-    memset(bm->map, 0, bm->size);
+    memsetb(bm->map, 0, bm->size);
 }
 
 

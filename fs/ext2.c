@@ -2,37 +2,38 @@
 #include <stdint.h>
 #include <fs/ext2.h>
 #include <fs/bitmap.h>
+#include <fs/buffer.h>
+#include <drivers/ata.h>
 #include <libs/string.h>
+#include <libs/stdlib.h>
+#include <kernel/memory.h>
 
 
-#define LBA_SIZE 512
+#ifndef MIN
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#endif /* MIN */
 
 #define BLOCK_SIZE(sb) (1 << ((sb)->block_size + 10))
 
-#define SINGLY_UPNUM(block_size) (12 + block_size / 32)
-#define DOUBLY_UPNUM(block_size) (12 + block_size / 32 + block_size / 32 * block_size / 32)
-#define TRIPLY_UPNUM(block_size) (12 + block_size / 32 + block_size / 32 * block_size / 32 + block_size / 32 * block_size / 32 * block_size / 32)
+
+int search_directory(int dev, struct inode* dir, char* filename, int filename_length, struct inode* result);
+int find_inode_from_path(int dev, char* filename, struct inode* result);
+void follow_symbolic_link(int dev, struct inode* link, struct inode* result);
+void find_inode_from_id(int dev, size_t inode_id, struct inode* result);
 
 
-extern void* malloc(size_t);
-extern void* memcpy(void*, const void*, size_t);
-extern void free(void*);
-
-extern void read_lba(int dev, int lba, uint8_t* buffer);
-extern void write_lba(int dev, int lba, uint8_t* buffer);
+static int initialized[4];
 
 
-int initialized[4];
-
-
-struct superblock superblocks[4];
+static struct superblock superblocks[4];
 
 
 struct superblock* get_super(int dev) {
     if (dev >= 4) return NULL;
     if (!initialized[dev]) {
-        read_lba(0, 2, (uint8_t*)(superblocks+dev));
-        read_lba(0, 3, (uint8_t*)((int)(superblocks+dev)+512));
+        struct buffer_head* bh = bread(dev, 1);
+        memcpy(superblocks+dev, bh->data, sizeof(struct superblock));
+        rlsblk(bh);
         initialized[dev] = 1;
     }
     return superblocks+dev;
@@ -41,26 +42,13 @@ struct superblock* get_super(int dev) {
 
 void read_block(int dev, uint32_t blockid, uint8_t* buffer) {
     struct superblock* sb = get_super(dev);
-    int block_size = 1 << (sb->block_size + 10);
-    int sectors_per_block = block_size / LBA_SIZE;
+    int sectors_per_block = BLOCK_SIZE(sb) / BUFFER_SIZE;
     int offset = blockid * sectors_per_block;
     for (int i = 0; i < sectors_per_block; i++) {
-        read_lba(dev, offset, buffer);
-        offset += 1;
-        buffer += LBA_SIZE;
-    }
-}
-
-
-void write_block(int dev, uint32_t blockid, uint8_t* buffer) {
-    struct superblock* sb = get_super(dev);
-    int block_size = 1 << (sb->block_size + 10);
-    int sectors_per_block = block_size / LBA_SIZE;
-    int offset = blockid * sectors_per_block;
-    for (int i = 0; i < sectors_per_block; i++) {
-        write_lba(dev, offset, buffer);
-        offset += 1;
-        buffer += LBA_SIZE;
+        struct buffer_head* bh = bread(dev, offset++);
+        memcpy(buffer, bh->data, BUFFER_SIZE);
+        buffer += BUFFER_SIZE;
+        rlsblk(bh);
     }
 }
 
@@ -69,8 +57,7 @@ void find_inode_from_id(int dev, size_t inode_id, struct inode* result) {
     inode_id--;                                // inode id starts from 1
     struct superblock* sb = get_super(dev);
     int group = inode_id / sb->inodes_per_group;
-    int block_size = 1 << (sb->block_size + 10);
-    uint8_t* block_buffer = (uint8_t*)malloc(block_size);
+    uint8_t* block_buffer = (uint8_t*)malloc(BLOCK_SIZE(sb));
     read_block(dev, sb->superblock + 1, block_buffer);       // Read block group descriptor table
     struct block_group_descriptor* bgd = (struct block_group_descriptor*)block_buffer;
     struct inode* inodes = (struct inode*)bgd[group].inode_table;
@@ -79,9 +66,8 @@ void find_inode_from_id(int dev, size_t inode_id, struct inode* result) {
 }
 
 
-int read_path(char* filename) {
+static inline int read_path(char* filename) {
     int i;
-    if (filename[0] == '/') filename++;
     for (i = 0; filename[i] != 0 && filename[i] != '/'; i++);
     return i; 
 }
@@ -105,36 +91,36 @@ void follow_symbolic_link(int dev, struct inode* link, struct inode* result) {
 
 
 int find_inode_from_path(int dev, char* filename, struct inode* result) {
+    // TODO: support relative path
     if (filename[0] != '/') {
-        printf("Must enter an absolute path\n");
+        // Must enter an absolute path
         return -1;
     }
-    char *name = filename + 1;
+
+    char *name = filename + 1;                   // lstrip '/'
     int length;
-    char* part_name;
     find_inode_from_id(dev, 2, result);          // Root inode
-    while(filename[length = read_path(name)] != 0) {
-        if (result->hard_links == 0) return NULL;               // File already deleted
+
+    while((length = read_path(name)) != 0) {
+        if (result->hard_links == 0) return -1;               // File already deleted
         int type = result->type_permission >> 11;
         switch (type) {
         case INODE_TYPE_DIRECTORY:
-            part_name = (char*)malloc((length+1) * sizeof(char));
-            memcpy(part_name, name, length);
-            part_name[length] = 0;
-            if (search_directory(dev, result, part_name, result) != 0) {                               // Can't find the file in the directory
+            if (search_directory(dev, result, name, length, result) != 0) {                               // Can't find the file in the directory
                 return -3;
             }
-            free(part_name);
             break;
         case INODE_TYPE_SYMBOLIC:
             follow_symbolic_link(dev, result, result);
             break;
         default:
-            printf("Unable to find inode of %s\n", filename);
+            // Unable to find inode
             return -2;
         }
         name += length;
+        if(name[0] == '/') name++;
     }
+    return 0;
 }
 
 
@@ -178,7 +164,7 @@ struct block_iterator* __iter_block(int dev, struct inode* inode, struct block_i
         state->lv0_table = (uint32_t*)malloc(block_size);
         state->lv1_table = (uint32_t*)malloc(block_size);
         state->lv2_table = (uint32_t*)malloc(block_size);
-        memcpy(inode->direct_block, state->lv0_table, sizeof(inode->direct_block));
+        memcpy(state->lv0_table, inode->direct_block, sizeof(inode->direct_block));
     }
 
     if (state->remain_size <= 0) {
@@ -189,16 +175,16 @@ struct block_iterator* __iter_block(int dev, struct inode* inode, struct block_i
     state->lv0++;
     if (state->lv0 >= state->lv0_size) {
         state->lv0 = 0;
-        state->lv0_size = block_size / sizeof(uint32_t);
+        state->lv0_size = (int)(block_size / sizeof(uint32_t));
         state->lv1++;
-        if (state->lv1 >= block_size / sizeof(uint32_t)) {
+        if (state->lv1 >= (int)(block_size / sizeof(uint32_t))) {
             state->lv1 = 0;
             state->lv2++;
             if (state->lv2 == 0)
-                read_block(dev, inode->doubly_indirect_block, state->lv2_table);
-            read_block(dev, state->lv2_table[state->lv2], state->lv1_table);
+                read_block(dev, inode->doubly_indirect_block, (void*)state->lv2_table);
+            read_block(dev, state->lv2_table[state->lv2], (void*)state->lv1_table);
         }
-        read_block(dev, state->lv1_table[state->lv1], state->lv0_table);
+        read_block(dev, state->lv1_table[state->lv1], (void*)state->lv0_table);
     }
 
     state->remain_size -= block_size;
@@ -227,25 +213,24 @@ void __finalize_iter_block(struct block_iterator* iter) {
 }while(0);
 
 
-int search_directory(int dev, struct inode* dir, char* filename, struct inode* result) {
-    int total_size = dir->low_size;
+int search_directory(int dev, struct inode* dir, char* filename, int filename_length, struct inode* result) {
     struct directory_entry* entry;
     struct block_iterator* iter;
     struct superblock* sb = get_super(dev);
     iter_block(iter, dev, dir, ({
         entry = (struct directory_entry*)iter->data;
         do {
-            if (strncmp(entry->name, filename, entry->name_length) == 0) {
+            if (strncmp(entry->name, filename, filename_length) == 0) {
                 goto end;
             } else {
                 entry = (struct directory_entry*)((uint8_t*)entry + entry->size);
             }
-        } while ((void*)entry < (void*)(iter->data + BLOCK_SIZE(sb)));
+        } while ((void*)entry < (void*)(iter->data + MIN(iter->remain_size, (size_t)BLOCK_SIZE(sb))));
         continue;
         end:
             break;
     }));
-    if (strncmp(entry->name, filename, entry->name_length) == 0) {
+    if (strncmp(entry->name, filename, filename_length) == 0) {
         find_inode_from_id(dev, entry->inode, result);
         return 0;
     } else {

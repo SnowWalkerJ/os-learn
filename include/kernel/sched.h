@@ -3,12 +3,12 @@
 
 #define UNUSED(x) (void)(x)
 #include <kernel/console.h>
-void sleep_on(void* link) {
+static inline void sleep_on(void* link) {
     panic("sleep_on: this shouldn't happen at all!");
     UNUSED(link);
 }
 
-void wake_up(void* link) {
+static inline void wake_up(void* link) {
     UNUSED(link);
 }
 

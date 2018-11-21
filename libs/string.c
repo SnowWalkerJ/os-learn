@@ -5,7 +5,7 @@
 
 char* int_to_hex(uint32_t value) {
 	char *x = (char*)malloc(9*sizeof(char));
-	memcpy("00000000", x, 9*sizeof(char));
+	memcpy(x, "00000000", 9*sizeof(char));
 	unsigned char* v = (unsigned char*)&value;
 	for (int i = 0; i < 4; i++) {
 		char c = v[i];
@@ -32,20 +32,20 @@ char* int_to_oct(uint32_t value, uint32_t digits) {
 	return x;
 }
 
-size_t strlen(char* string) {
+size_t strlen(const char* string) {
 	unsigned int i;
 	for (i = 0; string[i] != 0; i++);
 	return i;
 }
 
-int strcmp(char* str1, char*str2) {
+int strcmp(const char* str1, const char*str2) {
 	for(; !(*str1 == 0 || *str2 == 0 || *str1 != *str2); str1++, str2++)
 		;
 	return (*str1 - *str2);
 }
 
 
-int strncmp(char* str1, char* str2, size_t n) {
+int strncmp(const char* str1, const char* str2, size_t n) {
 	int result;
 	for (size_t i = 0; i < n; i++) {
 		result = (int)(str1[i] - str2[i]);

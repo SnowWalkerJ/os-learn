@@ -31,7 +31,7 @@ void bind_page(void* virtual_addr, void* physical_addr) {
         // The table_id-th table is not available yet
         enable_table(table_id);
     }
-    uint32_t* table = (uint32_t*)(page_directory[table_id] & (~(uint32_t)3));
+    uint32_t* table = (uint32_t*)(page_directory[table_id] & 0xFFFFF000);
     assert((table[page_id] & 0x01) == 0, "binding on an existing page"); 
     table[page_id] = (uint32_t)physical_addr | 3;
     enable_paging();
@@ -42,12 +42,17 @@ void unbind_page(void* virtual_addr) {
     table_id = (unsigned int)((uint32_t)virtual_addr >> 22);
     page_id = (unsigned int)(((uint32_t)virtual_addr >> 12) & 0x03FF);
     disable_paging();
-    uint32_t* table = (uint32_t*)(page_directory[table_id] & (~(uint32_t)3));
-    if ((table[page_id] & 0x01) == 0) return;
+    uint32_t* table = (uint32_t*)(page_directory[table_id] & 0xFFFFF000);
+    if ((table[page_id] & 0x01) == 0)
+        panic("unbinding a page that's not present.");
     table[page_id] = 2;
     enable_paging();
 }
 
+
+int page_enabled () {
+    return ((uint32_t)read_cr0() & 0x80000000) != 0;
+}
 
 void init_page_directory() {
     page_directory = (uint32_t*)kalloc_page();
@@ -88,6 +93,6 @@ void enable_paging() {
 
 void disable_paging () {
     if (paging_disable_level++ == 0) {
-        write_cr0(read_cr0() ^ 0x80000000);
+        write_cr0(read_cr0() & ~0x80000000);
     }
 }

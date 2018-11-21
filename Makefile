@@ -1,10 +1,10 @@
 C_SOURCES = $(wildcard drivers/*.c kernel/*.c libs/*.c cpu/*.c tests/*.c fs/*.c)
 S_SOURCES = $(wildcard cpu/*.asm kernel/*.asm)
-HEADERS = include/$(wildcard drivers/*.h kernel/*.h libs/*.h cpu/*.h tests/*.h fs/*.h)
+HEADERS = $(wildcard include/drivers/*.h include/kernel/*.h include/libs/*.h include/tests/*.h include/fs/*.h)
 TARGET_DIR = build
 DIST_DIR = dist
 OBJ = $(addprefix $(TARGET_DIR)/, $(C_SOURCES:.c=.o) $(S_SOURCES:.asm=.o))
-GDB = gdb
+GDB = i386-elf-gdb
 CC = i386-elf-gcc
 CFLAGS = -g -m32 -fno-builtin -ffreestanding -fno-stack-protector -nostartfiles -nodefaultlibs \
 	     -Wall -Wextra -Werror -fno-exceptions -Iinclude
@@ -17,11 +17,10 @@ makedir:
 	mkdir -p build/boot build/kernel build/fs build/cpu build/drivers build/libs build/tests dist/tools
 
 run: $(DIST_DIR)/os-image
-	qemu-system-i386 -curses -fda $<
+	qemu-system-i386 -curses -fda $< -hda fs.img -serial file:serial.log
 
 debug: build $(TARGET_DIR)/kernel.elf
-	# qemu-system-i386 -s -S -curses -fda os-image -d guest_errors,int & $(GDB) -ex "target remote localhost:1234" -ex "symbol-file kernel.elf"
-	qemu-system-i386 -s -S -curses -fda $(DIST_DIR)/os-image -d guest_errors,int
+	qemu-system-i386 -s -S -curses -fda $(DIST_DIR)/os-image -hda fs.img -d guest_errors,int
 
 clean:
 	rm -r build/* dist/*

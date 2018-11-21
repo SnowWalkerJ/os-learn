@@ -3,6 +3,9 @@
 #include <stdint.h>
 
 
+#define BUFFER_SIZE 1024
+
+
 struct buffer_head {
     int dev;
     int block;
@@ -20,6 +23,7 @@ struct buffer_head {
 
 void init_block_buffers();
 struct buffer_head* getblk(int, int);
+struct buffer_head* bread(int dev, int block);
 void rlsblk(struct buffer_head*);
 
 #endif /* BUFFER_H */

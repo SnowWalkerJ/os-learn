@@ -1,8 +1,6 @@
 [bits 32]
 [extern isr_handler]
 [extern irq_handler]
-[extern portByteOut]
-[extern portByteIn]
 [extern set_idt]
 [extern set_idt_gate]
 PIC1_CMD equ 0x20
@@ -77,12 +75,8 @@ isr_install:
     %endmacro
 
     %macro pbo 2
-    xor eax, eax
-    mov eax, %2
-    push eax
-    push %1
-    call portByteOut
-    add esp, 8
+    mov al, %2
+    out %1, byte al
     %endmacro
     
     %assign i 0
@@ -146,4 +140,3 @@ irq_%1:
     m_irq k
     %assign k k+1
 %endrep
-
