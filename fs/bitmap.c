@@ -12,16 +12,16 @@ void empty_bitmap(struct bitmap* bm) {
 void set_one(struct bitmap* bm, unsigned int addr) {
     unsigned int byte_addr = addr / 8;
     unsigned int bit_addr = addr % 8;
-    char* offset = bm->map + byte_addr;
-    *offset |= (char)(1 << (7 - bit_addr));
+    uint8_t* offset = bm->map + byte_addr;
+    *offset |= (uint8_t)(1 << bit_addr);
 }
 
 
 void set_zero(struct bitmap* bm, unsigned int addr) {
     unsigned int byte_addr = addr / 8;
     unsigned int bit_addr = addr % 8;
-    char* offset = bm->map + byte_addr;
-    *offset &= ~(char)(1 << (7 - bit_addr));
+    uint8_t* offset = bm->map + byte_addr;
+    *offset &= ~(uint8_t)(1 <<  bit_addr);
 }
 
 
@@ -35,8 +35,8 @@ unsigned int first_zero(struct bitmap* bm) {
         "je 2f;"
         "add %%edx, %%ecx;"
         "jmp 3f;"
-        "2: add %%ecx, 32;"
-        "cmp %%ebx, %%ecx;"
+        "2: add 32, %%ecx;"
+        "cmpl %%ebx, %%ecx;"
         "jl 1b;"
         "3:"
         : "=c" (result)

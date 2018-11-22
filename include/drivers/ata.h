@@ -32,14 +32,6 @@ enum drive_number {
 
 void init_hdd();
 
-void delay_400ns(enum bus_number);
-
-void select_drive(enum bus_number, enum drive_number);
-
-struct status_register identify(enum hd_device);
-
-struct status_register poll_status(enum bus_number);
-
-int pio_read_lba(int, int, void*);
+int pio_read_lba(int, int, void*, int);
 
 #endif /* ATA_H */

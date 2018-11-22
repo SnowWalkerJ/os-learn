@@ -27,10 +27,10 @@ void* kalloc_page() {
     if (id2 < 0) panic("inconsistent page bitmap");
     uint32_t addr = ((uint32_t)id1 * TABLE_SIZE * 8 + (uint32_t)id2) * PAGE_SIZE;
 
-    if (get_value(l2_table[id1]) == 0xFF)
+    if (get_value(l2_table[id1]) == TABLE_SIZE * 8)
         set_occupied(l1_table, id1);
     set_occupied(l2_table[id1], id2);
-    
+
     return (void*)addr;
 }
 
@@ -45,26 +45,33 @@ void kfree_page(void* addr) {
 }
 
 static int search_table(page_bitmap table) {
-    uint32_t max_id = TABLE_SIZE;
+    uint32_t max_id = TABLE_SIZE / sizeof(uint32_t);
     for (uint32_t bid = 0; bid < max_id; bid++) {
-        uint8_t block = table[bid];
-        if (block != 0xff) {
-            for (int cid = 0; cid <= 8; cid++) {
-                if ((block & 1) == 0) {
-                    return bid * 8 + cid;
-                } else {
-                    block >>= 1;
-                }
-            }
+        uint32_t block = ((uint32_t*)table)[bid];
+        if (block != 0xffffffff) {
+            int result;
+            asm("bsfl %1, %0;"
+                : "=r" (result)
+                : "r" (~block));
+            return bid * 32 + result;
         }
     }
     return -1;
 }
 
+static inline int bit_count(uint32_t n) {
+    int count;
+    for (count = 0; n; count++) {
+        n &= n-1;
+    }
+    return count;
+}
+
+
 static int get_value(page_bitmap table) {
     int total = 0;
-    for(int i = 0; i < TABLE_SIZE; i++) {
-        total += table[i];
+    for (int i = 0; i < (int)(TABLE_SIZE / sizeof(uint32_t)); i++) {
+        total += bit_count(((uint32_t*)table)[i]);
     }
     return total;
 }

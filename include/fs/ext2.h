@@ -1,6 +1,7 @@
 #ifndef EXT2_H
 #define EXT2_H
 #include <stdint.h>
+#include <libs/linknode.h>
 
 // File System States
 #define FS_STATE_CLEAN       0x01           // File system is clean
@@ -189,5 +190,8 @@ struct directory_entry {
 
 struct superblock* get_super(int dev);
 void init_block_buffers();
+void find_inode_from_id(int dev, size_t inode_id, struct inode* result);
+int find_inode_from_path(int dev, char* filename, struct inode* result);
+struct linknode* list_directory(int dev, struct inode* dir);
 
 #endif /* EXT2_H */

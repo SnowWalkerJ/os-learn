@@ -181,9 +181,7 @@ struct buffer_head* bread(int dev, int block) {
     if (bh->uptodate)
         return bh;
     uint32_t sector = bh->block * BUFFER_SIZE / SECTOR_SIZE;
-    for (uint32_t i = 0; i < BUFFER_SIZE / SECTOR_SIZE; i++){
-        pio_read_lba(bh->dev, sector+i, bh->data + i * SECTOR_SIZE);
-    }
+    pio_read_lba(bh->dev, sector, bh->data, BUFFER_SIZE / SECTOR_SIZE);
     wait_on_buffer(bh);
     bh->uptodate = 1;
     if (bh->uptodate)

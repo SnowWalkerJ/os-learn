@@ -6,6 +6,7 @@
 #include <drivers/ata.h>
 #include <libs/string.h>
 #include <libs/stdlib.h>
+#include <libs/linknode.h>
 #include <kernel/memory.h>
 
 
@@ -60,8 +61,9 @@ void find_inode_from_id(int dev, size_t inode_id, struct inode* result) {
     uint8_t* block_buffer = (uint8_t*)malloc(BLOCK_SIZE(sb));
     read_block(dev, sb->superblock + 1, block_buffer);       // Read block group descriptor table
     struct block_group_descriptor* bgd = (struct block_group_descriptor*)block_buffer;
-    struct inode* inodes = (struct inode*)bgd[group].inode_table;
-    memcpy(result, inodes + (inode_id % sb->inodes_per_group), sizeof(struct inode));
+    uint32_t inode_table_blkid = bgd[group].inode_table;
+    read_block(dev, inode_table_blkid, block_buffer);
+    memcpy(result, (struct inode*)block_buffer + (inode_id % sb->inodes_per_group), sizeof(struct inode));
     free(block_buffer);
 }
 
@@ -74,6 +76,9 @@ static inline int read_path(char* filename) {
 
 
 void follow_symbolic_link(int dev, struct inode* link, struct inode* result) {
+    /*
+    Find the target inode the symlink links to.
+    */
     int size = link->low_size;
     char* target_path;
     if (size < 60) {
@@ -236,4 +241,22 @@ int search_directory(int dev, struct inode* dir, char* filename, int filename_le
     } else {
         return -1;
     }
+}
+
+
+struct linknode* list_directory(int dev, struct inode* dir) {
+    struct linknode root = {NULL, NULL};
+    struct directory_entry* entry;
+    struct block_iterator* iter;
+    struct superblock* sb = get_super(dev);
+    iter_block(iter, dev, dir, ({
+        entry = (struct directory_entry*)iter->data;
+        do {
+            char* filename = (char*)malloc(entry->name_length+1);
+            memcpy(filename, entry->name, entry->name_length+1);
+            linknode_append(&root, filename);
+            entry = (struct directory_entry*)((uint8_t*)entry + entry->size);
+        } while ((void*)entry < (void*)(iter->data + MIN(iter->remain_size, (size_t)BLOCK_SIZE(sb))));
+    }));
+    return root.next;
 }

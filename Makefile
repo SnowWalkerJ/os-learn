@@ -17,7 +17,7 @@ makedir:
 	mkdir -p build/boot build/kernel build/fs build/cpu build/drivers build/libs build/tests dist/tools
 
 run: $(DIST_DIR)/os-image
-	qemu-system-i386 -curses -fda $< -hda fs.img -serial file:serial.log
+	qemu-system-i386 -curses -fda $< -hda fs.img
 
 debug: build $(TARGET_DIR)/kernel.elf
 	qemu-system-i386 -s -S -curses -fda $(DIST_DIR)/os-image -hda fs.img -d guest_errors,int

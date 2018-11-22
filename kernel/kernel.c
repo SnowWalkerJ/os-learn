@@ -13,8 +13,32 @@
 #include <kernel/interrupt_handlers.h>
 #include <libs/assert.h>
 #include <fs/buffer.h>
+#include <fs/ext2.h>
+#include <libs/linknode.h>
 extern void isr_install();
 void init_time();
+
+
+void read_hdd() {
+    struct superblock* sb = get_super(0);
+    printf("Total number of blocks: %d\n", (int)sb->blocks);
+    printf("Total number of inodes: %d\n", (int)sb->inodes);
+
+    struct inode inode;
+    find_inode_from_path(0, "/", &inode);
+    kprint_hex(inode.type_permission >> 12);
+
+    struct linknode* link = list_directory(0, &inode);
+    int i = 0;
+    while (link) {
+        printf("%d %s\n", i, (char*)link->value);
+        link = link->next;
+        i++;
+    }
+
+    linknode_free(link);
+}
+
 
 void init(){
     set_style(WHITE_ON_BLACK);
@@ -35,7 +59,8 @@ void init(){
     init_block_buffers();
     kprint("Buffers initialized\n");
     run_tests();
-    // init_time();
+    read_hdd();
+    init_time();
 }
 
 void init_time() {
@@ -48,6 +73,7 @@ void init_time() {
 }
 
 void shell () {
+    clearScreen();
     kprint("\nLearnOS> ");
 }
 
@@ -56,10 +82,5 @@ void shell () {
 
 void main () {
     init();
-
-    struct superblock* sb = get_super(0);
-    printf("Total number of blocks: %d\n", (int)sb->blocks);
-    printf("Total number of inodes: %d\n", (int)sb->inodes);
-
     shell();
 }

@@ -6,8 +6,6 @@ char* test_paging();
 char* test_memcpy();
 
 
-// FIXME: string constants not properly initialized
-
 static void run_one_test(char* (*func)(), char* name, int fatal) {
     char* result = (*func)();
     if (result != NULL) {
