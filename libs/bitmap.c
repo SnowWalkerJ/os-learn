@@ -1,5 +1,5 @@
 #include <libs/string.h>
-#include <fs/bitmap.h>
+#include <libs/bitmap.h>
 #include <libs/stdlib.h>
 
 
@@ -26,23 +26,16 @@ void set_zero(struct bitmap* bm, unsigned int addr) {
 
 
 unsigned int first_zero(struct bitmap* bm) {
-    unsigned int result;
-    asm volatile(
-        "cld;"
-        "1: lodsl;"              // [esi] -> eax
-        "notl %%eax;"
-        "bsfl %%eax, %%edx;"
-        "je 2f;"
-        "add %%edx, %%ecx;"
-        "jmp 3f;"
-        "2: add 32, %%ecx;"
-        "cmpl %%ebx, %%ecx;"
-        "jl 1b;"
-        "3:"
-        : "=c" (result)
-        : "S" (bm->map),
-        "c" (0),
-        "b" (bm->size*8)
-    );
-    return result;
+    uint32_t max_id = bm->size / sizeof(uint32_t);
+    for (uint32_t bid = 0; bid < max_id; bid++) {
+        uint32_t block = ((uint32_t*)bm->map)[bid];
+        if (block != 0xffffffff) {
+            int result;
+            asm("bsfl %1, %0;"
+                : "=r" (result)
+                : "r" (~block));
+            return bid * 32 + result;
+        }
+    }
+    return bm->size * 8;
 }

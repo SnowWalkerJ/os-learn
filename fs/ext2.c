@@ -1,9 +1,9 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <fs/ext2.h>
-#include <fs/bitmap.h>
 #include <fs/buffer.h>
 #include <drivers/ata.h>
+#include <libs/bitmap.h>
 #include <libs/string.h>
 #include <libs/stdlib.h>
 #include <libs/linknode.h>
