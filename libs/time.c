@@ -1,36 +1,36 @@
-#include <libs/time.h>
-#include <stddef.h>
 #include <drivers/rtc.h>
 #include <kernel/memory.h>
-#include <libs/string.h>
 #include <libs/stdlib.h>
+#include <libs/string.h>
+#include <libs/time.h>
+#include <stddef.h>
 #define days_in_year(year) (is_leap_year(year) ? 366 : 365)
 
 static inline int days_in_month(int, int);
 static inline int is_leap_year(int);
-static int add_with_carry(int, int, int, int*);
-static void _get_time_from_rtc(time_t*);
+static int add_with_carry(int, int, int, int *);
+static void _get_time_from_rtc(time_t *);
 
-void time(time_t* tm) {
+void time(time_t *tm) {
     time_t tmp;
-    time_t* times[2] = {tm, &tmp};
-    int i = 0;
+    time_t *times[2] = {tm, &tmp};
+    int i            = 0;
     while (1) {
         _get_time_from_rtc(times[i]);
         if (times[0]->second == times[1]->second &&
             times[0]->minute == times[1]->minute &&
-            times[0]->hour   == times[1]->hour &&
-            times[0]->day    == times[1]->day) {
-                break;
-            }
+            times[0]->hour == times[1]->hour &&
+            times[0]->day == times[1]->day) {
+            break;
+        }
         i = 1 - i;
     }
 }
 
-void strftime(time_t* tm, char* format, char* result) {
+void strftime(time_t *tm, char *format, char *result) {
     size_t len0 = strlen(format);
-    int state = 0;
-    int j = 0;
+    int state   = 0;
+    int j       = 0;
     for (int i = 0; i < (int)len0; i++) {
         if (state == 0) {
             if (format[i] != '%') {
@@ -42,40 +42,40 @@ void strftime(time_t* tm, char* format, char* result) {
             int n;
             switch (format[i]) {
             case 'Y':
-                n = tm->year;
+                n           = tm->year;
                 result[j++] = n / 1000 + '0';
                 result[j++] = (n / 100) % 10 + '0';
                 result[j++] = (n / 10) % 10 + '0';
                 result[j++] = n % 10 + '0';
                 break;
             case 'm':
-                n = tm->month;
+                n           = tm->month;
                 result[j++] = (n / 10) % 10 + '0';
                 result[j++] = n % 10 + '0';
                 break;
             case 'd':
-                n = tm->day;
+                n           = tm->day;
                 result[j++] = (n / 10) % 10 + '0';
                 result[j++] = n % 10 + '0';
                 break;
             case 'H':
-                n = tm->hour;
+                n           = tm->hour;
                 result[j++] = (n / 10) % 10 + '0';
                 result[j++] = n % 10 + '0';
                 break;
             case 'M':
-                n = tm->minute;
+                n           = tm->minute;
                 result[j++] = (n / 10) % 10 + '0';
                 result[j++] = n % 10 + '0';
                 break;
             case 'S':
-                n = tm->second;
+                n           = tm->second;
                 result[j++] = (n / 10) % 10 + '0';
                 result[j++] = n % 10 + '0';
                 break;
             default:
                 result[j++] = '%';
-                state = 0;
+                state       = 0;
                 i--;
             }
             state = 0;
@@ -84,7 +84,7 @@ void strftime(time_t* tm, char* format, char* result) {
     result[j] = 0;
 }
 
-time_t strptime(char* content, char* format) {
+time_t strptime(char *content, char *format) {
     size_t len0 = strlen(format);
     time_t tm;
     int state = 0;
@@ -101,35 +101,29 @@ time_t strptime(char* content, char* format) {
         } else {
             switch (fch) {
             case 'Y':
-                tm.year = (content[ci] - '0') * 1000 +
-                          (content[ci+1] - '0') * 100 +
-                          (content[ci+2] - '0') * 10 +
-                          (content[ci+3] - '0');
+                tm.year =
+                    (content[ci] - '0') * 1000 + (content[ci + 1] - '0') * 100 +
+                    (content[ci + 2] - '0') * 10 + (content[ci + 3] - '0');
                 ci += 4;
                 break;
             case 'm':
-                tm.month = (content[ci] - '0') * 10 +
-                           (content[ci+1] - '0');
+                tm.month = (content[ci] - '0') * 10 + (content[ci + 1] - '0');
                 ci += 2;
                 break;
             case 'd':
-                tm.day = (content[ci] - '0') * 10 +
-                         (content[ci+1] - '0');
+                tm.day = (content[ci] - '0') * 10 + (content[ci + 1] - '0');
                 ci += 2;
                 break;
             case 'H':
-                tm.hour = (content[ci] - '0') * 10 +
-                          (content[ci+1] - '0');
+                tm.hour = (content[ci] - '0') * 10 + (content[ci + 1] - '0');
                 ci += 2;
                 break;
             case 'M':
-                tm.minute = (content[ci] - '0') * 10 +
-                            (content[ci+1] - '0');
+                tm.minute = (content[ci] - '0') * 10 + (content[ci + 1] - '0');
                 ci += 2;
                 break;
             case 'S':
-                tm.second = (content[ci] - '0') * 10 +
-                            (content[ci+1] - '0');
+                tm.second = (content[ci] - '0') * 10 + (content[ci + 1] - '0');
                 ci += 2;
                 break;
             }
@@ -140,9 +134,9 @@ time_t strptime(char* content, char* format) {
 
 time_t change_time(time_t base, time_delta_t delta) {
     int carry;
-    base.second = add_with_carry(base.second, delta.dsec        , 60, &carry);
+    base.second = add_with_carry(base.second, delta.dsec, 60, &carry);
     base.minute = add_with_carry(base.minute, delta.dmin + carry, 60, &carry);
-    base.hour   = add_with_carry(base.hour  , delta.dhr  + carry, 24, &carry);
+    base.hour   = add_with_carry(base.hour, delta.dhr + carry, 24, &carry);
     delta.dday += carry;
     int leap = is_leap_year(base.year);
 
@@ -153,17 +147,19 @@ time_t change_time(time_t base, time_delta_t delta) {
         delta.dday += days_in_month(leap, month);
     }
     base.month = 1;
-    
-    for (; ;) {
+
+    for (;;) {
         int d_in_y = days_in_year(base.year);
-        if (delta.dday < d_in_y) break;
+        if (delta.dday < d_in_y)
+            break;
         delta.dday -= d_in_y;
         base.year++;
     }
     leap = is_leap_year(base.year);
-    for (; ;) {
+    for (;;) {
         int d_in_m = days_in_month(leap, base.month);
-        if (delta.dday < d_in_m) break;
+        if (delta.dday < d_in_m)
+            break;
         delta.dday -= d_in_m;
         month++;
     }
@@ -171,9 +167,9 @@ time_t change_time(time_t base, time_delta_t delta) {
     return base;
 }
 
-int to_timestamp(time_t* tm) {
+int to_timestamp(time_t *tm) {
     time_t base = {1970, 1, 1, 0, 0, 0};
-    int days = 0, year, month;
+    int days    = 0, year, month;
     for (year = base.year; year < tm->year; year++) {
         days += days_in_year(year);
     }
@@ -182,12 +178,13 @@ int to_timestamp(time_t* tm) {
         days += days_in_month(leap, month);
     }
     days += tm->day - 1;
-    int timestamp = ((days * 24 + tm->hour) * 60 + tm->minute) * 60 + tm->second;
+    int timestamp =
+        ((days * 24 + tm->hour) * 60 + tm->minute) * 60 + tm->second;
     return timestamp;
 }
 
 time_t from_timestamp(int timestamp) {
-    time_t base = {1970, 1, 1, 0, 0, 0};
+    time_t base        = {1970, 1, 1, 0, 0, 0};
     time_delta_t delta = {0, 0, 0, timestamp};
     return change_time(base, delta);
 }
@@ -239,9 +236,9 @@ static inline int is_leap_year(int year) {
     return (year % 100 == 0) ? (year % 400 == 0) : (year % 4 == 0);
 }
 
-static int add_with_carry(int val1, int val2, int base, int* carry) {
+static int add_with_carry(int val1, int val2, int base, int *carry) {
     int result = val1 + val2;
-    *carry = result / base;
+    *carry     = result / base;
     return result % base;
 }
 
@@ -251,5 +248,6 @@ static void _get_time_from_rtc(time_t *tm) {
     tm->hour   = BCD_TO_BIN(read_rtc_register(4));
     tm->day    = BCD_TO_BIN(read_rtc_register(7));
     tm->month  = BCD_TO_BIN(read_rtc_register(8));
-    tm->year   = BCD_TO_BIN(read_rtc_register(9)) + BCD_TO_BIN(read_rtc_register(0x32))*100;
+    tm->year   = BCD_TO_BIN(read_rtc_register(9)) +
+               BCD_TO_BIN(read_rtc_register(0x32)) * 100;
 }

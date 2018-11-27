@@ -1,58 +1,56 @@
-#include <stddef.h>
-#include <kernel/isr.h>
-#include <kernel/idt.h>
 #include <drivers/screen.h>
+#include <kernel/idt.h>
+#include <kernel/isr.h>
 #include <kernel/memory.h>
-#include <libs/string.h>
 #include <kernel/port.h>
+#include <libs/string.h>
+#include <stddef.h>
 
 #define PIC1_CMD 0x20
 #define PIC2_CMD 0xA0
-#define PIC1_DATA (PIC1_CMD+1)
-#define PIC2_DATA (PIC2_CMD+1)
+#define PIC1_DATA (PIC1_CMD + 1)
+#define PIC2_DATA (PIC2_CMD + 1)
 #define PIC_EOI 0x20
 
 static isr_t interrupt_handlers[256];
 
-const char* exceptions_messages[] = {
-    "Division By Zero",
-    "Debug",
-    "Non Maskable Interrupt",
-    "Breakpoint",
-    "Into Detected Overflow",
-    "Out of Bounds",
-    "Invalid Opcode",
-    "No Coprocessor",
+const char *exceptions_messages[] = {"Division By Zero",
+                                     "Debug",
+                                     "Non Maskable Interrupt",
+                                     "Breakpoint",
+                                     "Into Detected Overflow",
+                                     "Out of Bounds",
+                                     "Invalid Opcode",
+                                     "No Coprocessor",
 
-    "Double Fault",
-    "Coprocessor Segment Overrun",
-    "Bad TSS",
-    "Segment Not Present",
-    "Stack Fault",
-    "General Protection",
-    "Page Fault",
-    "Unknown Interrupt",
-    
-    "Coprocessort Fault",
-    "Alignment Check",
-    "Machine Check",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved"
-};
+                                     "Double Fault",
+                                     "Coprocessor Segment Overrun",
+                                     "Bad TSS",
+                                     "Segment Not Present",
+                                     "Stack Fault",
+                                     "General Protection",
+                                     "Page Fault",
+                                     "Unknown Interrupt",
 
-void isr_handler(registers_t* reg) {
+                                     "Coprocessort Fault",
+                                     "Alignment Check",
+                                     "Machine Check",
+                                     "Reserved",
+                                     "Reserved",
+                                     "Reserved",
+                                     "Reserved",
+                                     "Reserved",
+
+                                     "Reserved",
+                                     "Reserved",
+                                     "Reserved",
+                                     "Reserved",
+                                     "Reserved",
+                                     "Reserved",
+                                     "Reserved",
+                                     "Reserved"};
+
+void isr_handler(registers_t *reg) {
     if (interrupt_handlers[reg->int_no]) {
         isr_t handler = interrupt_handlers[reg->int_no];
         handler(reg);
@@ -68,9 +66,9 @@ void register_interrupt_handler(uint8_t n, isr_t handler) {
     interrupt_handlers[n] = handler;
 }
 
-void irq_handler(registers_t* reg) {
+void irq_handler(registers_t *reg) {
     if (reg->int_no >= 40)
-	    portByteOut(PIC2_CMD, PIC_EOI);
+        portByteOut(PIC2_CMD, PIC_EOI);
     portByteOut(PIC1_CMD, PIC_EOI);
 
     if (interrupt_handlers[reg->int_no]) {
@@ -78,4 +76,3 @@ void irq_handler(registers_t* reg) {
         handler(reg);
     }
 }
-

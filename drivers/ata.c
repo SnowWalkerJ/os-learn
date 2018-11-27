@@ -3,34 +3,32 @@
 */
 #include <drivers/ata.h>
 #include <fs/buffer.h>
-#include <libs/stdio.h>
 #include <kernel/memory.h>
-
+#include <libs/stdio.h>
 
 enum COMMANDS {
-    READ_SECTORS = 0x20,
+    READ_SECTORS  = 0x20,
     WRITE_SECTORS = 0x30,
-    FLUSH_CACHE = 0xE7,
-    IDENTIFY = 0xEC
+    FLUSH_CACHE   = 0xE7,
+    IDENTIFY      = 0xEC
 };
-
 
 static enum drive_number selected[2];
 
 static int exists[4];
 
+#define PRIMARY_IO_BASE 0x1F0
+#define PRIMARY_CONTROL_BASE 0x3F6
 
-#define PRIMARY_IO_BASE        0x1F0
-#define PRIMARY_CONTROL_BASE   0x3F6
-
-#define SECONDARY_IO_BASE      0x170
+#define SECONDARY_IO_BASE 0x170
 #define SECONDARY_CONTROL_BASE 0x376
 
-#define DRIVER_NUMER(dev) ((dev) & 1)
-#define BUS_NUMBER(dev) ((dev) & 2)
+#define DRIVER_NUMER(dev) ((dev)&1)
+#define BUS_NUMBER(dev) ((dev)&2)
 
 #define IO_BASE(bus) ((bus) ? SECONDARY_IO_BASE : PRIMARY_IO_BASE)
-#define CONTROL_BASE(bus) ((bus) ? SECONDARY_CONTROL_BASE : PRIMARY_CONTROL_BASE)
+#define CONTROL_BASE(bus)                                                      \
+    ((bus) ? SECONDARY_CONTROL_BASE : PRIMARY_CONTROL_BASE)
 
 #define data_io(bus) (IO_BASE(bus) + 0)
 #define error_io(bus) (IO_BASE(bus) + 1)
@@ -47,7 +45,6 @@ static int exists[4];
 #define device_control(bus) (CONTROL_BASE(bus) + 1)
 #define drive_addr_control(bus) (CONTROL_BASE(bus) + 1)
 
-
 struct error_register {
     uint8_t amnf  : 1;      // Address mark not found
     uint8_t tkznf : 1;      // Track zero not found
@@ -58,7 +55,6 @@ struct error_register {
     uint8_t unc   : 1;      // Uncorrectable data error
     uint8_t bbk   : 1;      // Bad Block detected
 };
-
 
 struct status_register {
     uint8_t err  : 1;        // Indicates an error occurred. Send a new command to clear it (or nuke it with a Software Reset)
@@ -71,7 +67,6 @@ struct status_register {
     uint8_t bsy  : 1;        // Indicates the drive is preparing to send/receive data (wait for it to clear). In case of 'hang' (it never clears), do a software reset
 };
 
-
 static void delay_400ns(enum bus_number);
 
 static void select_drive(enum bus_number, enum drive_number);
@@ -80,18 +75,15 @@ static struct status_register identify(enum hd_device);
 
 static struct status_register poll_status(enum bus_number);
 
-
 void init_hdd() {
-    const char* disk_names[] = {
-        "HDA", "HDB", "HDC", "HDD"
-    };
-    char* data = (char*)malloc(512);
+    const char *disk_names[] = {"HDA", "HDB", "HDC", "HDD"};
+    char *data               = (char *)malloc(512);
     for (int i = 0; i < 4; i++) {
         struct status_register status = identify(i);
-        if ((exists[i] = *(uint8_t*)&status && !status.err)) {
+        if ((exists[i] = *(uint8_t *)&status && !status.err)) {
             printf("Found drive %s\n", disk_names[i]);
             if (status.drq) {
-                insw(data_io(BUS_NUMBER(i)), (uint16_t*)data, 256);
+                insw(data_io(BUS_NUMBER(i)), (uint16_t *)data, 256);
                 delay_400ns(BUS_NUMBER(i));
             }
         }
@@ -102,7 +94,6 @@ void init_hdd() {
     select_drive(SECONDARY_BUS, MASTER_DRIVE);
 }
 
-
 static void delay_400ns(enum bus_number bus) {
     uint16_t port = IO_BASE(bus);
     portByteIn(port);
@@ -110,7 +101,6 @@ static void delay_400ns(enum bus_number bus) {
     portByteIn(port);
     portByteIn(port);
 }
-
 
 static void select_drive(enum bus_number bus, enum drive_number drive) {
     if (selected[bus] == drive)
@@ -120,9 +110,8 @@ static void select_drive(enum bus_number bus, enum drive_number drive) {
     selected[bus] = drive;
 }
 
-
 static struct status_register identify(enum hd_device dev) {
-    uint8_t bus = BUS_NUMBER(dev);
+    uint8_t bus   = BUS_NUMBER(dev);
     uint8_t drive = DRIVER_NUMER(dev);
     portByteOut(drive_head_io(bus), drive == MASTER_DRIVE ? 0xA0 : 0xB0);
     portByteOut(sector_count_io(bus), 0);
@@ -134,29 +123,29 @@ static struct status_register identify(enum hd_device dev) {
     return poll_status(bus);
 }
 
-
 static struct status_register poll_status(enum bus_number bus) {
     uint8_t status_byte;
-    struct status_register* status = (struct status_register*)&status_byte;
+    struct status_register *status = (struct status_register *)&status_byte;
     do {
         *&status_byte = portByteIn(status_io(bus));
     } while (status->bsy);
-    if (status_byte && (portByteIn(lba_hi_io(bus) != 0 || portByteIn(lba_mi_io(bus) != 0)))) {
+    if (status_byte &&
+        (portByteIn(lba_hi_io(bus) != 0 || portByteIn(lba_mi_io(bus) != 0)))) {
         // It's not ATA device
         *&status_byte = 0;
     }
     return *status;
 }
 
-
-int pio_read_lba(int dev, int block, void* data, int count) {
+int pio_read_lba(int dev, int block, void *data, int count) {
     /*
     Read continuous `count` sectors of data from device `dev` begin with
     lba id = `block` using PIO LBA24 mode.
      */
     uint8_t drive_number = DRIVER_NUMER(dev);
     uint8_t bus_number   = BUS_NUMBER(dev);
-    portByteOut(drive_head_io(bus_number), (uint8_t)((drive_number << 4) | 0xE0 | ((block >> 24) & 0x0F)));
+    portByteOut(drive_head_io(bus_number),
+                (uint8_t)((drive_number << 4) | 0xE0 | ((block >> 24) & 0x0F)));
     portByteOut(features_io(bus_number), 0);
     portByteOut(sector_count_io(bus_number), (uint8_t)(count & 0xFF));
     portByteOut(lba_lo_io(bus_number), (uint8_t)(block & 0xFF));
@@ -171,7 +160,8 @@ int pio_read_lba(int dev, int block, void* data, int count) {
             status = poll_status(bus_number);
         } while (!(status.err || status.drq));
         if (status.drq) {
-            insw(data_io(drive_number), (uint16_t*)data + i * SECTOR_SIZE, count_of_words);
+            insw(data_io(drive_number), (uint16_t *)data + i * SECTOR_SIZE,
+                 count_of_words);
             delay_400ns(bus_number);
         } else if (status.err) {
             i--;
@@ -180,11 +170,11 @@ int pio_read_lba(int dev, int block, void* data, int count) {
     return i;
 }
 
-
-int pio_write_lba (int dev, int block, void* data, int count) {
+int pio_write_lba(int dev, int block, void *data, int count) {
     uint8_t drive_number = DRIVER_NUMER(dev);
     uint8_t bus_number   = BUS_NUMBER(dev);
-    portByteOut(drive_head_io(bus_number), (uint8_t)((drive_number << 4) | 0xE0 | ((block >> 24) & 0x0F)));
+    portByteOut(drive_head_io(bus_number),
+                (uint8_t)((drive_number << 4) | 0xE0 | ((block >> 24) & 0x0F)));
     portByteOut(features_io(bus_number), 0);
     portByteOut(sector_count_io(bus_number), (uint8_t)(count & 0xFF));
     portByteOut(lba_lo_io(bus_number), (uint8_t)(block & 0xFF));
@@ -200,7 +190,8 @@ int pio_write_lba (int dev, int block, void* data, int count) {
         } while (!(status.err || status.drq));
         if (status.drq) {
             for (int j = 0; j < (int)count_of_words; j++) {
-                *((uint16_t*)data + i * count_of_words + j) = portWordIn(data_io(drive_number));
+                *((uint16_t *)data + i * count_of_words + j) =
+                    portWordIn(data_io(drive_number));
             }
             portByteOut(command_io(bus_number), FLUSH_CACHE);
             delay_400ns(bus_number);

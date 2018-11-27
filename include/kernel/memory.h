@@ -4,6 +4,6 @@
 #include <stdint.h>
 
 void init_malloc();
-void* malloc(size_t);
-void free(void*);
+void *malloc(size_t);
+void free(void *);
 #endif

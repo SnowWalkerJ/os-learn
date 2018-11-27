@@ -1,5 +1,5 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
-void panic(char*);
+void panic(char *);
 #endif
