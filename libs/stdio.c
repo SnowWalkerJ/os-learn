@@ -36,7 +36,7 @@ void printf(const char *fmt, ...) {
                 break;
             case 'd':
                 num       = va_arg(arg, int);
-                char *oct = int_to_oct(num, fmt_length);
+                char *oct = itoa(num, fmt_length);
                 kprint(oct);
                 free(oct);
                 fmt_length = 0;

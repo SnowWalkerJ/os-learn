@@ -96,16 +96,16 @@ void init_hdd() {
 
 static void delay_400ns(enum bus_number bus) {
     uint16_t port = IO_BASE(bus);
-    portByteIn(port);
-    portByteIn(port);
-    portByteIn(port);
-    portByteIn(port);
+    inb(port);
+    inb(port);
+    inb(port);
+    inb(port);
 }
 
 static void select_drive(enum bus_number bus, enum drive_number drive) {
     if (selected[bus] == drive)
         return;
-    portByteOut(drive_head_io(bus), ((drive << 4) | 0xE0));
+    outb(drive_head_io(bus), ((drive << 4) | 0xE0));
     delay_400ns(bus);
     selected[bus] = drive;
 }
@@ -113,13 +113,13 @@ static void select_drive(enum bus_number bus, enum drive_number drive) {
 static struct status_register identify(enum hd_device dev) {
     uint8_t bus   = BUS_NUMBER(dev);
     uint8_t drive = DRIVER_NUMER(dev);
-    portByteOut(drive_head_io(bus), drive == MASTER_DRIVE ? 0xA0 : 0xB0);
-    portByteOut(sector_count_io(bus), 0);
-    portByteOut(lba_hi_io(bus), 0);
-    portByteOut(lba_mi_io(bus), 0);
-    portByteOut(lba_lo_io(bus), 0);
+    outb(drive_head_io(bus), drive == MASTER_DRIVE ? 0xA0 : 0xB0);
+    outb(sector_count_io(bus), 0);
+    outb(lba_hi_io(bus), 0);
+    outb(lba_mi_io(bus), 0);
+    outb(lba_lo_io(bus), 0);
     // select_drive(bus, drive);
-    portByteOut(command_io(bus), IDENTIFY);
+    outb(command_io(bus), IDENTIFY);
     return poll_status(bus);
 }
 
@@ -127,10 +127,10 @@ static struct status_register poll_status(enum bus_number bus) {
     uint8_t status_byte;
     struct status_register *status = (struct status_register *)&status_byte;
     do {
-        *&status_byte = portByteIn(status_io(bus));
+        *&status_byte = inb(status_io(bus));
     } while (status->bsy);
     if (status_byte &&
-        (portByteIn(lba_hi_io(bus) != 0 || portByteIn(lba_mi_io(bus) != 0)))) {
+        (inb(lba_hi_io(bus) != 0 || inb(lba_mi_io(bus) != 0)))) {
         // It's not ATA device
         *&status_byte = 0;
     }
@@ -144,14 +144,14 @@ int pio_read_lba(int dev, int block, void *data, int count) {
      */
     uint8_t drive_number = DRIVER_NUMER(dev);
     uint8_t bus_number   = BUS_NUMBER(dev);
-    portByteOut(drive_head_io(bus_number),
+    outb(drive_head_io(bus_number),
                 (uint8_t)((drive_number << 4) | 0xE0 | ((block >> 24) & 0x0F)));
-    portByteOut(features_io(bus_number), 0);
-    portByteOut(sector_count_io(bus_number), (uint8_t)(count & 0xFF));
-    portByteOut(lba_lo_io(bus_number), (uint8_t)(block & 0xFF));
-    portByteOut(lba_mi_io(bus_number), (uint8_t)((block >> 8) & 0xFF));
-    portByteOut(lba_hi_io(bus_number), (uint8_t)((block >> 16) & 0xFF));
-    portByteOut(command_io(bus_number), READ_SECTORS);
+    outb(features_io(bus_number), 0);
+    outb(sector_count_io(bus_number), (uint8_t)(count & 0xFF));
+    outb(lba_lo_io(bus_number), (uint8_t)(block & 0xFF));
+    outb(lba_mi_io(bus_number), (uint8_t)((block >> 8) & 0xFF));
+    outb(lba_hi_io(bus_number), (uint8_t)((block >> 16) & 0xFF));
+    outb(command_io(bus_number), READ_SECTORS);
     int i = 0;
     unsigned int count_of_words = SECTOR_SIZE / sizeof(uint16_t);
     struct status_register status;
@@ -173,14 +173,14 @@ int pio_read_lba(int dev, int block, void *data, int count) {
 int pio_write_lba(int dev, int block, void *data, int count) {
     uint8_t drive_number = DRIVER_NUMER(dev);
     uint8_t bus_number   = BUS_NUMBER(dev);
-    portByteOut(drive_head_io(bus_number),
+    outb(drive_head_io(bus_number),
                 (uint8_t)((drive_number << 4) | 0xE0 | ((block >> 24) & 0x0F)));
-    portByteOut(features_io(bus_number), 0);
-    portByteOut(sector_count_io(bus_number), (uint8_t)(count & 0xFF));
-    portByteOut(lba_lo_io(bus_number), (uint8_t)(block & 0xFF));
-    portByteOut(lba_mi_io(bus_number), (uint8_t)((block >> 8) & 0xFF));
-    portByteOut(lba_hi_io(bus_number), (uint8_t)((block >> 16) & 0xFF));
-    portByteOut(command_io(bus_number), WRITE_SECTORS);
+    outb(features_io(bus_number), 0);
+    outb(sector_count_io(bus_number), (uint8_t)(count & 0xFF));
+    outb(lba_lo_io(bus_number), (uint8_t)(block & 0xFF));
+    outb(lba_mi_io(bus_number), (uint8_t)((block >> 8) & 0xFF));
+    outb(lba_hi_io(bus_number), (uint8_t)((block >> 16) & 0xFF));
+    outb(command_io(bus_number), WRITE_SECTORS);
     int i = 0;
     unsigned int count_of_words = SECTOR_SIZE / sizeof(uint16_t);
     struct status_register status;
@@ -191,9 +191,9 @@ int pio_write_lba(int dev, int block, void *data, int count) {
         if (status.drq) {
             for (int j = 0; j < (int)count_of_words; j++) {
                 *((uint16_t *)data + i * count_of_words + j) =
-                    portWordIn(data_io(drive_number));
+                    inw(data_io(drive_number));
             }
-            portByteOut(command_io(bus_number), FLUSH_CACHE);
+            outb(command_io(bus_number), FLUSH_CACHE);
             delay_400ns(bus_number);
         } else if (status.err) {
             i--;

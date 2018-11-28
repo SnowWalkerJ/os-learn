@@ -251,3 +251,9 @@ static void _get_time_from_rtc(time_t *tm) {
     tm->year   = BCD_TO_BIN(read_rtc_register(9)) +
                BCD_TO_BIN(read_rtc_register(0x32)) * 100;
 }
+
+void init_time() {
+    time_t tm;
+    time(&tm);
+    startup_time = to_timestamp(&tm);
+}

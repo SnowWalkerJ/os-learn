@@ -5,7 +5,7 @@
 #include <libs/assert.h>
 #include <stddef.h>
 
-static uint32_t *page_directory;
+uint32_t *page_directory;
 static int paging_disable_level;
 
 void init_page_directory();

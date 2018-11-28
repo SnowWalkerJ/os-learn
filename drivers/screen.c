@@ -68,19 +68,19 @@ static inline unsigned int getOffset(int row, int col) {
 }
 
 static unsigned int getCursorOffset() {
-	portByteOut(REG_SCREEN_CTRL, 14);
-	unsigned int offset = (unsigned int)(portByteIn(REG_SCREEN_DATA) << 8);
-	portByteOut(REG_SCREEN_CTRL, 15);
-	offset += portByteIn(REG_SCREEN_DATA);
+	outb(REG_SCREEN_CTRL, 14);
+	unsigned int offset = (unsigned int)(inb(REG_SCREEN_DATA) << 8);
+	outb(REG_SCREEN_CTRL, 15);
+	offset += inb(REG_SCREEN_DATA);
 	return offset * 2;
 }
 
 static void setCursorOffset(unsigned int offset) {
 	offset /= 2;
-	portByteOut(REG_SCREEN_CTRL, 14);
-	portByteOut(REG_SCREEN_DATA, (unsigned char)((offset >> 8) & 0xff));
-	portByteOut(REG_SCREEN_CTRL, 15);
-	portByteOut(REG_SCREEN_DATA, (unsigned char)(offset & 0xff));
+	outb(REG_SCREEN_CTRL, 14);
+	outb(REG_SCREEN_DATA, (unsigned char)((offset >> 8) & 0xff));
+	outb(REG_SCREEN_CTRL, 15);
+	outb(REG_SCREEN_DATA, (unsigned char)(offset & 0xff));
 }
 
 static inline int getOffsetRow(unsigned int offset) {

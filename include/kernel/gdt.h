@@ -14,7 +14,7 @@ typedef struct {
 typedef struct {
     uint16_t limit;
     uint32_t offset;
-} __attribute__((packed)) gdt_descriptor_t;
+} __attribute__((packed)) descriptor_t;
 
 uint8_t make_access(int pr, int privl, int ex, int dc, int rw);
 void set_gdt_gate(int entry_id, uint32_t base, uint32_t limit, uint8_t access,

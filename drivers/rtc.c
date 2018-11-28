@@ -8,6 +8,6 @@
 
 
 uint8_t read_rtc_register(uint32_t reg) {
-    portByteOut(CMOS_ADDR, reg|0x80);
-    return portByteIn(CMOS_DATA);
+    outb(CMOS_ADDR, reg|0x80);
+    return inb(CMOS_DATA);
 }

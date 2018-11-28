@@ -68,8 +68,8 @@ void register_interrupt_handler(uint8_t n, isr_t handler) {
 
 void irq_handler(registers_t *reg) {
     if (reg->int_no >= 40)
-        portByteOut(PIC2_CMD, PIC_EOI);
-    portByteOut(PIC1_CMD, PIC_EOI);
+        outb(PIC2_CMD, PIC_EOI);
+    outb(PIC1_CMD, PIC_EOI);
 
     if (interrupt_handlers[reg->int_no]) {
         isr_t handler = interrupt_handlers[reg->int_no];

@@ -9,10 +9,13 @@ typedef struct {
     int dday, dhr, dmin, dsec;
 } time_delta_t;
 
+extern long startup_time;
+
 int to_timestamp(time_t *);
 time_t from_timestamp(int);
 void time(time_t *);
 void strftime(time_t *, char *, char *);
 time_t strptime(char *, char *);
+void init_time();
 
 #endif

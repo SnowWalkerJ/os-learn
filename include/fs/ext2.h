@@ -2,6 +2,8 @@
 #define EXT2_H
 #include <stdint.h>
 #include <libs/linknode.h>
+#include <fs/buffer.h>
+#include <kernel/sched.h>
 
 // File System States
 #define FS_STATE_CLEAN       0x01           // File system is clean
@@ -134,6 +136,21 @@ struct superblock {
 } __attribute__((packed));
 
 
+struct m_superblock {
+    struct superblock superblock;
+    struct buffer_head *s_imap[8];
+	struct buffer_head *s_zmap[8];
+	uint16_t s_dev;
+	struct m_inode *s_isup;
+	struct m_inode *s_imount;
+	uint32_t s_time;
+	struct task_struct *s_wait;
+	uint8_t s_lock;
+	uint8_t s_rd_only;
+	uint8_t s_dirt;
+} __attribute__((packed));
+
+
 //  Block Group Descriptor
 struct block_group_descriptor {
     /* 32 bytes */
@@ -178,6 +195,23 @@ struct inode {
     uint16_t high_uid;                  // Higher 16bit of 32bit user-id
     uint16_t high_gid;                  // Higher 16bit of 32bit group-id
     uint32_t reserved2;                 // Reserved
+} __attribute__((packed));
+
+
+struct m_inode {
+    struct inode inode;
+    struct task_struct * i_wait;
+	uint32_t i_atime;
+	uint32_t i_ctime;
+	uint16_t i_dev;
+	uint16_t i_num;
+	uint16_t i_count;
+	uint8_t i_lock;
+	uint8_t i_dirt;
+	uint8_t i_pipe;
+	uint8_t i_mount;
+	uint8_t i_seek;
+	uint8_t i_update;
 } __attribute__((packed));
 
 struct directory_entry {

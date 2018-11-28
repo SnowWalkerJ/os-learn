@@ -1,8 +1,9 @@
 #include <kernel/gdt.h>
+#include <kernel/defs.h>
 
 #define GDT_ENTRIES 6
 gdt_gate_t gdt_gates[GDT_ENTRIES];
-gdt_descriptor_t gdt_descriptor;
+descriptor_t gdt_descriptor;
 
 extern void gdt_flush();
 

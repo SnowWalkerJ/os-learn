@@ -8,6 +8,7 @@
 #include <kernel/kmemory.h>
 #include <kernel/memory.h>
 #include <kernel/page.h>
+#include <kernel/sched.h>
 #include <libs/assert.h>
 #include <libs/linknode.h>
 #include <libs/stdio.h>
@@ -16,7 +17,6 @@
 #include <stdint.h>
 #include <tests/testings.h>
 extern void isr_install();
-void init_time();
 
 void read_hdd() {
     struct superblock *sb = get_super(0);
@@ -59,15 +59,7 @@ void init() {
     run_tests();
     read_hdd();
     init_time();
-}
-
-void init_time() {
-    time_t tm;
-    time(&tm);
-    char *text = (char *)malloc(20);
-    strftime(&tm, "%Y-%m-%d %H:%M:%S", text);
-    printf("Boot time: %s UTC\n", text);
-    free(text);
+    init_sched();
 }
 
 void shell() {
