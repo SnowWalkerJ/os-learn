@@ -44,14 +44,14 @@ void init() {
     kprintAt("Kernel entered.\n", 1, 0);
     init_gdt();
     kprint("Kernel take control of gdt\n");
-    init_memory_tables();
-    init_page();
-    init_malloc();
-    kprint("Memory initialized\n");
     isr_install();
     kprint("ISR installed\n");
     register_interrupt_handlers();
     kprint("Interrupt handlers registered\n");
+    init_memory_tables();
+    init_page();
+    init_malloc();
+    kprint("Memory initialized\n");
     init_hdd();
     kprint("Hard drives initialized\n");
     init_block_buffers();

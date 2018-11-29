@@ -82,7 +82,7 @@ struct task_struct {
     uint32_t close_on_exec;
     struct file *filp[NR_OPEN];
     /* ldt for this task 0 - zero 1 - cs 2 - ds&ss */
-    descriptor_t ldt[3];
+    gdt_gate_t ldt[3];
     /* tss for this task */
     struct tss_struct tss;
 };

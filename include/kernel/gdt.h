@@ -21,4 +21,16 @@ void set_gdt_gate(int entry_id, uint32_t base, uint32_t limit, uint8_t access,
                   uint8_t flags);
 void init_gdt();
 
+extern gdt_gate_t gdt_gates[];
+
+/* compose access byte from flag bits
+    pr: present
+    privl: priviledge ring0 - ring3
+    ex: executable
+    dc
+    rw: readable for code / writable for data */
+#define make_access(pr, privl, ex, dc, rw) \
+    (uint8_t) (((pr) << 7) | ((privl) << 5) | \
+    (1 << 4) | ((ex) << 3) | ((dc) << 2) | ((rw) << 1))
+
 #endif

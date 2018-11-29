@@ -22,7 +22,7 @@ jmp $
 %include 'boot/disk.asm'
 
 load_kernel:
-	mov al, 50
+	mov al, 54
 	mov ch, 0
 	mov cl, 2
 	mov bx, KERNEL_OFFSET  ; target address

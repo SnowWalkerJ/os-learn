@@ -4,6 +4,7 @@
 #include <kernel/memory.h>
 #include <kernel/port.h>
 #include <libs/string.h>
+#include <libs/stdio.h>
 #include <stddef.h>
 
 #define PIC1_CMD 0x20
@@ -55,10 +56,8 @@ void isr_handler(registers_t *reg) {
         isr_t handler = interrupt_handlers[reg->int_no];
         handler(reg);
     } else {
-        kprint("Unhandled interrupt: ");
-        kprint_hex(reg->int_no);
-        kprint(exceptions_messages[reg->int_no]);
-        kprint("\n");
+        printf("Unhandled interrupt: %d %s\n", reg->int_no, exceptions_messages[reg->int_no]);
+        while (1);
     }
 }
 

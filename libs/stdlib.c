@@ -17,6 +17,16 @@ void memsetw(void *addr, uint16_t value, size_t count) {
                  "a"(value), "c"(count));
 }
 
+void memsetd(void *addr, uint32_t value, size_t count) {
+    // for (size_t i = 0; i < count; i++) {
+    //     ((uint16_t*)addr)[i] = value;
+    // }
+    asm volatile("cld;"
+                 "rep;"
+                 "stosl;" ::"D"(addr),
+                 "a"(value), "c"(count));
+}
+
 void memcpy(void *dst, const void *src, size_t count) {
     if (src < dst) {
         dst = (void *)((char *)dst + count - 1);
